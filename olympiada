@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Олимпиады для поступления 2024 | Путеводитель</title>
+    <meta name="description" content="Полный гид по олимпиадам, дающим льготы при поступлении в вузы">
+    <style>
+        :root {
+            --level-1: #e74c3c;
+            --level-2: #f39c12;
+            --level-3: #2ecc71;
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --bg-light: #f9f9f9;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            color: var(--text-dark);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        h1 {
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+        
+        .filter-section {
+            background: #f0f8ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .olympiad {
+            background: var(--bg-light);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .olympiad:hover {
+            transform: translateY(-3px);
+        }
+        
+        .level-1 { border-left: 5px solid var(--level-1); }
+        .level-2 { border-left: 5px solid var(--level-2); }
+        .level-3 { border-left: 5px solid var(--level-3); }
+        
+        .level-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .level-1-badge { background: var(--level-1); color: white; }
+        .level-2-badge { background: var(--level-2); color: white; }
+        .level-3-badge { background: var(--level-3); color: white; }
+        
+        a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
+            
+            .olympiad {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🏆 Путеводитель по олимпиадам 2024</h1>
+        <p class="subtitle">Все олимпиады, дающие льготы при поступлении в вузы</p>
+    </header>
+    
+    <section class="filter-section">
+        <h2>🔍 Поиск олимпиад</h2>
+        <input type="text" id="search" placeholder="Введите предмет или название..." style="padding: 8px; width: 100%; max-width: 500px;">
+        <div style="margin-top: 10px;">
+            <label><input type="checkbox" class="level-filter" value="1" checked> I уровень</label>
+            <label><input type="checkbox" class="level-filter" value="2" checked> II уровень</label>
+            <label><input type="checkbox" class="level-filter" value="3"> III уровень</label>
+        </div>
+    </section>
+    
+    <main>
+        <div class="olympiad level-1">
+            <h3>Всероссийская олимпиада школьников <span class="level-badge level-1-badge">I уровень</span></h3>
+            <p><strong>Льготы:</strong> Зачисление без вступительных испытаний по профильному предмету</p>
+            <p><strong>Предметы:</strong> Все основные школьные дисциплины</p>
+            <p><strong>Этапы:</strong> Школьный → Муниципальный → Региональный → Заключительный</p>
+            <a href="https://vos.olimpiada.ru/" target="_blank">Перейти на официальный сайт →</a>
+        </div>
+        
+        <div class="olympiad level-1">
+            <h3>«Ломоносов» (МГУ) <span class="level-badge level-1-badge">I уровень</span></h3>
+            <p><strong>Льготы:</strong> БВИ или 100 баллов по профильному ЕГЭ в МГУ и других вузах</p>
+            <p><strong>Предметы:</strong> 25 направлений (от математики до журналистики)</p>
+            <p><strong>Особенности:</strong> Два этапа: отборочный (заочный) и заключительный (очный)</p>
+            <a href="https://olymp.msu.ru" target="_blank">Перейти на официальный сайт →</a>
+        </div>
+        
+        <div class="olympiad level-1">
+            <h3>«Покори Воробьёвы горы!» <span class="level-badge level-1-badge">I уровень</span></h3>
+            <p><strong>Льготы:</strong> БВИ или 100 баллов по профильному предмету</p>
+            <p><strong>Предметы:</strong> 7 направлений (физика, математика, биология и др.)</p>
+            <p><strong>Особенности:</strong> Для учащихся 5-11 классов</p>
+            <a href="https://pvg.mk.ru/" target="_blank">Перейти на официальный сайт →</a>
+        </div>
+        
+        <!-- Шаблон для добавления новых олимпиад -->
+        <!--
+        <div class="olympiad level-2">
+            <h3>Название олимпиады <span class="level-badge level-2-badge">II уровень</span></h3>
+            <p><strong>Льготы:</strong> ...</p>
+            <p><strong>Предметы:</strong> ...</p>
+            <p><strong>Особенности:</strong> ...</p>
+            <a href="ссылка" target="_blank">Перейти на официальный сайт →</a>
+        </div>
+        -->
+    </main>
+    
+    <section style="margin-top: 40px;">
+        <h2>📌 Как использовать этот гид?</h2>
+        <ol>
+            <li><strong>Выберите интересующие вас предметы</strong> - используйте поиск выше</li>
+            <li><strong>Обратите внимание на уровень олимпиады</strong> - I уровень дает максимальные льготы</li>
+            <li><strong>Проверьте сроки проведения</strong> - на официальных сайтах</li>
+            <li><strong>Уточните льготы</strong> - на сайте конкретного вуза</li>
+        </ol>
+        
+        <h3 style="margin-top: 20px;">ℹ Полезные советы</h3>
+        <ul>
+            <li>Начинайте подготовку за 6-12 месяцев до олимпиады</li>
+            <li>Изучайте задания прошлых лет</li>
+            <li>Участвуйте в нескольких олимпиадах для подстраховки</li>
+        </ul>
+    </section>
+    
+    <footer>
+        <p>© 2024 Путеводитель по олимпиадам | Обновлено: январь 2024</p>
+        <p>Нашли ошибку? Хотите добавить олимпиаду? <a href="https://github.com/ваш-логин/olympiad-guide/issues" target="_blank">Сообщите нам</a></p>
+    </footer>
+
+    <script>
+        // Простой поиск по олимпиадам
+        document.getElementById('search').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const olympiads = document.querySelectorAll('.olympiad');
+            
+            olympiads.forEach(olympiad => {
+                const text = olympiad.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    olympiad.style.display = 'block';
+                } else {
+                    olympiad.style.display = 'none';
+                }
+            });
+        });
+        
+        // Фильтрация по уровням
+        const levelFilters = document.querySelectorAll('.level-filter');
+        levelFilters.forEach(filter => {
+            filter.addEventListener('change', filterOlympiads);
+        });
+        
+        function filterOlympiads() {
+            const selectedLevels = Array.from(levelFilters)
+                .filter(f => f.checked)
+                .map(f => f.value);
+                
+            const olympiads = document.querySelectorAll('.olympiad');
+            
+            olympiads.forEach(olympiad => {
+                const level = olympiad.classList.contains('level-1') ? '1' :
+                              olympiad.classList.contains('level-2') ? '2' : '3';
+                              
+                if (selectedLevels.includes(level)) {
+                    olympiad.style.display = 'block';
+                } else {
+                    olympiad.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
