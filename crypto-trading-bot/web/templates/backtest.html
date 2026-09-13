@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Бэктест — Crypto Trading Bot{% endblock %}
+{% block content %}
+
+<div class="card">
+    <h2>Бэктест стратегии</h2>
+    <p>Проверь, как стратегия вела бы себя на прошлых данных, прежде чем пробовать её в paper-режиме.</p>
+
+    <form method="post">
+        <div class="form-grid">
+            <div>
+                <label>Монета (символ)</label>
+                <input name="symbol" value="{{ form.symbol }}">
+            </div>
+            <div>
+                <label>Таймфрейм</label>
+                <select name="timeframe">
+                    {% for tf in ["15m", "1h", "4h", "1d"] %}
+                    <option value="{{ tf }}" {{ "selected" if form.timeframe == tf else "" }}>{{ tf }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Стратегия</label>
+                <select name="strategy" onchange="toggleStrategyFields(this.value)">
+                    {% for key, label in strategy_labels.items() %}
+                    <option value="{{ key }}" {{ "selected" if form.strategy == key else "" }}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Стартовый баланс (USDT)</label>
+                <input name="capital" type="number" value="{{ form.capital }}">
+            </div>
+            <div>
+                <label>Дата начала</label>
+                <input name="date_from" type="date" value="{{ form.date_from }}">
+            </div>
+            <div>
+                <label>Дата конца</label>
+                <input name="date_to" type="date" value="{{ form.date_to }}">
+            </div>
+        </div>
+
+        <div id="sma-fields" class="form-grid" style="margin-top: 14px;">
+            <div>
+                <label>SMA: быстрый период</label>
+                <input name="fast" type="number" value="{{ form.fast }}">
+            </div>
+            <div>
+                <label>SMA: медленный период</label>
+                <input name="slow" type="number" value="{{ form.slow }}">
+            </div>
+        </div>
+
+        <div id="rsi-fields" class="form-grid" style="margin-top: 14px;">
+            <div>
+                <label>RSI: период</label>
+                <input name="rsi_period" type="number" value="{{ form.rsi_period }}">
+            </div>
+            <div>
+                <label>RSI: покупка ниже</label>
+                <input name="rsi_buy" type="number" value="{{ form.rsi_buy }}">
+            </div>
+            <div>
+                <label>RSI: продажа выше</label>
+                <input name="rsi_sell" type="number" value="{{ form.rsi_sell }}">
+            </div>
+        </div>
+
+        <div class="form-grid" style="margin-top: 14px;">
+            <div>
+                <label>Риск на сделку, %</label>
+                <input name="risk_pct" type="number" step="0.1" value="{{ form.risk_pct }}">
+            </div>
+            <div>
+                <label>Стоп-лосс, %</label>
+                <input name="stop_loss_pct" type="number" step="0.1" value="{{ form.stop_loss_pct }}">
+            </div>
+            <div>
+                <label>Тейк-профит, %</label>
+                <input name="take_profit_pct" type="number" step="0.1" value="{{ form.take_profit_pct }}">
+            </div>
+            <div>
+                <label>Комиссия биржи, %</label>
+                <input name="fee_pct" type="number" step="0.01" value="{{ form.fee_pct }}">
+            </div>
+        </div>
+
+        <button type="submit">Запустить бэктест</button>
+    </form>
+</div>
+
+{% if error %}
+<div class="error-box">{{ error }}</div>
+{% endif %}
+
+{% if result %}
+<div class="card">
+    <h2>Результат</h2>
+    <p>Период: {{ result.period_start }} — {{ result.period_end }} ({{ result.num_candles }} свечей)</p>
+
+    <div class="metrics">
+        <div class="metric">
+            <div class="value {{ 'positive' if result.summary.total_return_pct >= 0 else 'negative' }}">{{ result.summary.total_return_pct }}%</div>
+            <div class="label">Доходность стратегии</div>
+        </div>
+        <div class="metric">
+            <div class="value {{ 'positive' if result.buy_hold_pct >= 0 else 'negative' }}">{{ result.buy_hold_pct }}%</div>
+            <div class="label">Просто купить и держать</div>
+        </div>
+        <div class="metric">
+            <div class="value negative">{{ result.summary.max_drawdown_pct }}%</div>
+            <div class="label">Макс. просадка</div>
+        </div>
+        <div class="metric">
+            <div class="value">{{ result.summary.num_trades }}</div>
+            <div class="label">Сделок</div>
+        </div>
+        <div class="metric">
+            <div class="value">{{ result.summary.win_rate_pct }}%</div>
+            <div class="label">Доля прибыльных</div>
+        </div>
+        <div class="metric">
+            <div class="value">{{ result.summary.sharpe_ratio }}</div>
+            <div class="label">Sharpe</div>
+        </div>
+    </div>
+
+    <img class="chart" src="data:image/png;base64,{{ result.chart }}" alt="График баланса">
+
+    {% if result.trades %}
+    <h3 style="margin-top: 20px;">Последние сделки</h3>
+    <table>
+        <tr><th>Вход</th><th>Выход</th><th>Цена входа</th><th>Цена выхода</th><th>Причина</th><th>Результат</th></tr>
+        {% for t in result.trades %}
+        <tr>
+            <td>{{ t.entry_time }}</td>
+            <td>{{ t.exit_time }}</td>
+            <td>{{ "%.2f"|format(t.entry_price) }}</td>
+            <td>{{ "%.2f"|format(t.exit_price) }}</td>
+            <td>{{ t.exit_reason }}</td>
+            <td class="{{ 'positive' if t.return_pct >= 0 else 'negative' }}">{{ "%.2f"|format(t.return_pct) }}%</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+</div>
+{% endif %}
+
+<script>
+function toggleStrategyFields(value) {
+    document.getElementById('sma-fields').style.display = value === 'sma' ? 'grid' : 'none';
+    document.getElementById('rsi-fields').style.display = value === 'rsi' ? 'grid' : 'none';
+}
+toggleStrategyFields(document.querySelector('select[name=strategy]').value);
+</script>
+{% endblock %}
