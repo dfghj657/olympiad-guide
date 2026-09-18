@@ -3,7 +3,15 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
-from bot.risk import RiskParams, stop_loss_price, take_profit_price
+from bot.risk import (
+    RiskParams,
+    is_stop_loss_safe,
+    liquidation_price,
+    margin_required,
+    position_size,
+    stop_loss_price,
+    take_profit_price,
+)
 from bot.strategies.base import Strategy
 
 
@@ -37,6 +45,10 @@ class BacktestResult:
         return len(self.trades)
 
     @property
+    def num_liquidations(self) -> int:
+        return sum(1 for t in self.trades if t.exit_reason == "liquidation")
+
+    @property
     def win_rate_pct(self) -> float:
         if not self.trades:
             return 0.0
@@ -62,6 +74,7 @@ class BacktestResult:
             "total_return_pct": round(self.total_return_pct, 2),
             "max_drawdown_pct": round(self.max_drawdown_pct, 2),
             "num_trades": self.num_trades,
+            "num_liquidations": self.num_liquidations,
             "win_rate_pct": round(self.win_rate_pct, 2),
             "avg_trade_return_pct": round(self.avg_trade_return_pct, 2),
             "sharpe_ratio": round(self.sharpe_ratio, 2),
@@ -83,8 +96,11 @@ def run_backtest(
     in_position = False
     entry_price = 0.0
     entry_time = None
+    qty = 0.0
+    margin = 0.0
     sl_price = 0.0
     tp_price = 0.0
+    liq_price = 0.0
 
     fee_mult = risk.fee_pct / 100
 
@@ -92,17 +108,28 @@ def run_backtest(
         if not in_position:
             equity_curve.iloc[i] = equity
             if positions.iloc[i] == 1:
-                in_position = True
                 entry_price = row["close"] * (1 + fee_mult)
-                entry_time = ts
-                sl_price = stop_loss_price(entry_price, risk)
-                tp_price = take_profit_price(entry_price, risk)
+                qty = position_size(equity, entry_price, risk)
+                if qty > 0:
+                    in_position = True
+                    entry_time = ts
+                    margin = margin_required(qty, entry_price, risk)
+                    sl_price = stop_loss_price(entry_price, risk)
+                    tp_price = take_profit_price(entry_price, risk)
+                    liq_price = liquidation_price(entry_price, risk)
             continue
 
         exit_price = None
         exit_reason = None
 
-        if row["low"] <= sl_price:
+        # Liquidation is an exchange-forced close, not our own order — if it sits
+        # closer to entry than our stop-loss, it fires first as price falls.
+        liquidated = risk.leverage > 1 and liq_price > 0 and row["low"] <= liq_price
+        stopped = row["low"] <= sl_price
+
+        if liquidated and (not stopped or liq_price >= sl_price):
+            exit_reason = "liquidation"
+        elif stopped:
             exit_price = sl_price
             exit_reason = "stop_loss"
         elif row["high"] >= tp_price:
@@ -112,13 +139,22 @@ def run_backtest(
             exit_price = row["close"]
             exit_reason = "signal"
 
-        if exit_price is not None:
+        if exit_reason == "liquidation":
+            # Full margin for this trade is gone; nothing left to take a fee from.
+            equity -= margin
+            trades.append(Trade(entry_time, entry_price, ts, liq_price, "liquidation", -100.0))
+            in_position = False
+        elif exit_price is not None:
             exit_price_after_fee = exit_price * (1 - fee_mult)
-            trade_return_pct = (exit_price_after_fee / entry_price - 1) * 100
-            equity *= exit_price_after_fee / entry_price
+            dollar_pnl = qty * (exit_price_after_fee - entry_price)
+            equity += dollar_pnl
+            trade_return_pct = (dollar_pnl / margin) * 100 if margin > 0 else 0.0
             trades.append(Trade(entry_time, entry_price, ts, exit_price_after_fee, exit_reason, trade_return_pct))
             in_position = False
 
         equity_curve.iloc[i] = equity
 
     return BacktestResult(equity_curve=equity_curve, trades=trades)
+
+
+__all__ = ["Trade", "BacktestResult", "run_backtest", "is_stop_loss_safe"]

@@ -17,8 +17,8 @@ from flask import Flask, jsonify, redirect, render_template, request, url_for
 
 from bot.backtest import run_backtest
 from bot.data import fetch_ohlcv_range
-from bot.exchange import build_public_exchange
-from bot.risk import RiskParams
+from bot.exchange import build_public_exchange, futures_symbol
+from bot.risk import RiskParams, is_stop_loss_safe, liquidation_price
 from bot.strategies import build_strategy
 from bot.trader import _trades_csv_path, run_iteration
 
@@ -40,12 +40,32 @@ def make_strategy(form):
 
 
 def make_risk(form):
+    market = form.get("market", "spot")
+    leverage = float(form.get("leverage", 1.0)) if market == "futures" else 1.0
     return RiskParams(
         risk_per_trade_pct=float(form.get("risk_pct", 1.0)),
         stop_loss_pct=float(form.get("stop_loss_pct", 2.0)),
         take_profit_pct=float(form.get("take_profit_pct", 4.0)),
         fee_pct=float(form.get("fee_pct", 0.1)),
+        leverage=leverage,
     )
+
+
+def resolve_symbol(symbol, market):
+    return futures_symbol(symbol) if market == "futures" else symbol
+
+
+def leverage_warning(risk: RiskParams):
+    if risk.leverage <= 1:
+        return None
+    liq = liquidation_price(100.0, risk)
+    liq_move_pct = round(100.0 - liq, 2)
+    safe = is_stop_loss_safe(risk)
+    return {
+        "safe": safe,
+        "liq_move_pct": liq_move_pct,
+        "stop_loss_pct": risk.stop_loss_pct,
+    }
 
 
 def equity_chart_base64(equity_curve: pd.Series) -> str:
@@ -79,6 +99,8 @@ DEFAULT_FORM = {
     "date_from": "2023-01-01",
     "date_to": "2024-01-01",
     "interval_sec": 60,
+    "market": "spot",
+    "leverage": 1,
 }
 
 
@@ -96,14 +118,16 @@ def backtest():
     if request.method == "POST":
         form_values.update(request.form.to_dict())
         try:
-            exchange = build_public_exchange()
+            market = form_values.get("market", "spot")
+            symbol = resolve_symbol(form_values["symbol"], market)
+            exchange = build_public_exchange(market_type=market)
             since_ms = int(
                 datetime.strptime(form_values["date_from"], "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp() * 1000
             )
             until_ms = int(
                 datetime.strptime(form_values["date_to"], "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp() * 1000
             )
-            df = fetch_ohlcv_range(exchange, form_values["symbol"], form_values["timeframe"], since_ms, until_ms)
+            df = fetch_ohlcv_range(exchange, symbol, form_values["timeframe"], since_ms, until_ms)
             if df.empty:
                 error = "Не удалось получить исторические данные. Проверьте символ, таймфрейм и даты."
             else:
@@ -120,6 +144,7 @@ def backtest():
                     "period_start": df.index[0],
                     "period_end": df.index[-1],
                     "trades": list(reversed(bt_result.trades))[:20],
+                    "leverage_warning": leverage_warning(risk),
                 }
         except Exception as exc:  # surfaced to the user in the page, not a 500
             error = f"Ошибка: {exc}"
@@ -138,7 +163,7 @@ class PaperSession:
         self.log = deque(maxlen=100)
         self.lock = threading.Lock()
 
-    def start(self, symbol, timeframe, strategy, risk, capital, interval_sec):
+    def start(self, symbol, timeframe, strategy, risk, capital, interval_sec, market="spot"):
         with self.lock:
             if self.running:
                 return False
@@ -148,11 +173,12 @@ class PaperSession:
                 "timeframe": timeframe,
                 "strategy": strategy.name,
                 "capital": capital,
+                "leverage": risk.leverage,
             }
             self.running = True
 
         def loop():
-            exchange = build_public_exchange()
+            exchange = build_public_exchange(market_type=market)
             while not self.stop_event.is_set():
                 entry = {"time": datetime.now(timezone.utc).isoformat(timespec="seconds")}
                 try:
@@ -197,11 +223,12 @@ def paper():
 def paper_start():
     strategy = make_strategy(request.form)
     risk = make_risk(request.form)
-    symbol = request.form.get("symbol", "BTC/USDT")
+    market = request.form.get("market", "spot")
+    symbol = resolve_symbol(request.form.get("symbol", "BTC/USDT"), market)
     timeframe = request.form.get("timeframe", "1h")
     capital = float(request.form.get("capital", 1000))
     interval_sec = int(request.form.get("interval_sec", 60))
-    paper_session.start(symbol, timeframe, strategy, risk, capital, interval_sec)
+    paper_session.start(symbol, timeframe, strategy, risk, capital, interval_sec, market=market)
     return redirect(url_for("paper"))
 
 

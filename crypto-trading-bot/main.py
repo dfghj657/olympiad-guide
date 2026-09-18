@@ -5,9 +5,9 @@ from datetime import datetime, timezone
 from bot.backtest import run_backtest
 from bot.config import ExchangeConfig
 from bot.data import fetch_ohlcv_range
-from bot.exchange import build_exchange, build_public_exchange
+from bot.exchange import build_exchange, build_public_exchange, futures_symbol
 from bot.logger import setup_logger
-from bot.risk import RiskParams
+from bot.risk import RiskParams, is_stop_loss_safe, liquidation_price
 from bot.strategies import build_strategy
 from bot.trader import run_forever
 
@@ -28,6 +28,10 @@ def add_common_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--take-profit-pct", type=float, default=4.0)
     parser.add_argument("--fee-pct", type=float, default=0.1)
     parser.add_argument("--capital", type=float, default=1000.0)
+    parser.add_argument("--market", choices=["spot", "futures"], default="spot",
+                         help="spot (no leverage) or futures (leverage, liquidation risk)")
+    parser.add_argument("--leverage", type=float, default=1.0,
+                         help="Only meaningful with --market futures. 1.0 = no leverage.")
 
 
 def build_strategy_from_args(args) -> object:
@@ -37,32 +41,61 @@ def build_strategy_from_args(args) -> object:
 
 
 def build_risk_from_args(args) -> RiskParams:
+    leverage = args.leverage if args.market == "futures" else 1.0
     return RiskParams(
         risk_per_trade_pct=args.risk_pct,
         stop_loss_pct=args.stop_loss_pct,
         take_profit_pct=args.take_profit_pct,
         fee_pct=args.fee_pct,
+        leverage=leverage,
     )
 
 
+def warn_if_leverage_unsafe(risk: RiskParams) -> None:
+    if risk.leverage <= 1:
+        return
+    liq = liquidation_price(100.0, risk)
+    liq_move_pct = round((100.0 - liq), 2)
+    if is_stop_loss_safe(risk):
+        logger.info(
+            "Leverage %sx: liquidation is ~%s%% away from entry, your %s%% stop-loss fires first (as intended).",
+            risk.leverage, liq_move_pct, risk.stop_loss_pct,
+        )
+    else:
+        logger.warning(
+            "DANGER: at %sx leverage, liquidation is only ~%s%% away from entry — closer than your "
+            "%s%% stop-loss. The exchange will force-close the position (losing the full margin) "
+            "BEFORE your stop-loss ever gets a chance to fire. Lower the leverage or widen the gap "
+            "between stop-loss and liquidation before trusting this configuration.",
+            risk.leverage, liq_move_pct, risk.stop_loss_pct,
+        )
+
+
+def resolve_symbol(symbol: str, market: str) -> str:
+    return futures_symbol(symbol) if market == "futures" else symbol
+
+
 def cmd_backtest(args) -> None:
-    exchange = build_public_exchange()
+    exchange = build_public_exchange(market_type=args.market)
+    symbol = resolve_symbol(args.symbol, args.market)
     since_ms = int(datetime.strptime(args.date_from, "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp() * 1000)
     until_ms = int(datetime.strptime(args.date_to, "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp() * 1000)
 
-    logger.info("Fetching %s %s candles from %s to %s...", args.symbol, args.timeframe, args.date_from, args.date_to)
-    df = fetch_ohlcv_range(exchange, args.symbol, args.timeframe, since_ms, until_ms)
+    risk = build_risk_from_args(args)
+    warn_if_leverage_unsafe(risk)
+
+    logger.info("Fetching %s %s candles from %s to %s...", symbol, args.timeframe, args.date_from, args.date_to)
+    df = fetch_ohlcv_range(exchange, symbol, args.timeframe, since_ms, until_ms)
     if df.empty:
         logger.error("No candles fetched, check symbol/timeframe/date range.")
         sys.exit(1)
 
     strategy = build_strategy_from_args(args)
-    risk = build_risk_from_args(args)
     result = run_backtest(df, strategy, risk, initial_capital=args.capital)
 
     buy_hold_pct = (df["close"].iloc[-1] / df["close"].iloc[0] - 1) * 100
 
-    print(f"\n=== Backtest: {args.symbol} {args.timeframe} | strategy={strategy.name} ===")
+    print(f"\n=== Backtest: {symbol} {args.timeframe} | strategy={strategy.name} | leverage={risk.leverage}x ===")
     print(f"Period: {df.index[0]} -> {df.index[-1]} ({len(df)} candles)")
     for key, value in result.summary().items():
         print(f"{key}: {value}")
@@ -70,10 +103,12 @@ def cmd_backtest(args) -> None:
 
 
 def cmd_paper(args) -> None:
-    exchange = build_public_exchange()
+    exchange = build_public_exchange(market_type=args.market)
+    symbol = resolve_symbol(args.symbol, args.market)
     strategy = build_strategy_from_args(args)
     risk = build_risk_from_args(args)
-    run_forever(exchange, args.symbol, args.timeframe, strategy, risk, dry_run=True,
+    warn_if_leverage_unsafe(risk)
+    run_forever(exchange, symbol, args.timeframe, strategy, risk, dry_run=True,
                 initial_capital=args.capital, once=args.once)
 
 
@@ -83,21 +118,34 @@ def cmd_live(args) -> None:
         sys.exit(1)
 
     config = ExchangeConfig.from_env()
+    config.market_type = args.market
     if not config.api_key or not config.api_secret:
         print("Missing API keys. Set BINANCE_API_KEY / BINANCE_API_SECRET in your .env file.")
         sys.exit(1)
 
-    exchange = build_exchange(config)
-    strategy = build_strategy_from_args(args)
     risk = build_risk_from_args(args)
+    warn_if_leverage_unsafe(risk)
+
+    if args.market == "futures" and risk.leverage > 1 and not is_stop_loss_safe(risk):
+        print(
+            f"\nRefusing to start: at {risk.leverage}x leverage your {risk.stop_loss_pct}% stop-loss would "
+            "never fire — the exchange liquidates (and takes the full margin) first. Lower --leverage or "
+            "raise --stop-loss-pct so the stop-loss is tighter than the liquidation distance, then retry."
+        )
+        sys.exit(1)
+
+    exchange = build_exchange(config)
+    symbol = resolve_symbol(args.symbol, args.market)
+    strategy = build_strategy_from_args(args)
 
     mode = "TESTNET" if config.use_testnet else "REAL MONEY"
-    confirm = input(f"About to trade {args.symbol} on {mode}. Type 'YES' to continue: ")
+    label = f"{mode} ({args.market}, {risk.leverage}x leverage)" if args.market == "futures" else f"{mode} (spot)"
+    confirm = input(f"About to trade {symbol} on {label}. Type 'YES' to continue: ")
     if confirm.strip() != "YES":
         print("Aborted.")
         sys.exit(0)
 
-    run_forever(exchange, args.symbol, args.timeframe, strategy, risk, dry_run=False,
+    run_forever(exchange, symbol, args.timeframe, strategy, risk, dry_run=False,
                 initial_capital=args.capital, once=args.once)
 
 

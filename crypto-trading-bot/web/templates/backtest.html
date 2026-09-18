@@ -40,6 +40,17 @@
                 <label>Дата конца</label>
                 <input name="date_to" type="date" value="{{ form.date_to }}">
             </div>
+            <div>
+                <label>Рынок</label>
+                <select name="market" onchange="toggleLeverageField(this.value)">
+                    <option value="spot" {{ "selected" if form.market == "spot" else "" }}>Спот (без плеча)</option>
+                    <option value="futures" {{ "selected" if form.market == "futures" else "" }}>Фьючерсы (с плечом)</option>
+                </select>
+            </div>
+            <div id="leverage-field">
+                <label>Плечо (x)</label>
+                <input name="leverage" type="number" step="1" min="1" value="{{ form.leverage }}">
+            </div>
         </div>
 
         <div id="sma-fields" class="form-grid" style="margin-top: 14px;">
@@ -100,6 +111,18 @@
     <h2>Результат</h2>
     <p>Период: {{ result.period_start }} — {{ result.period_end }} ({{ result.num_candles }} свечей)</p>
 
+    {% if result.leverage_warning %}
+        {% if result.leverage_warning.safe %}
+        <div class="disclaimer">
+            ℹ️ При этом плече ликвидация происходит примерно на {{ result.leverage_warning.liq_move_pct }}% движения цены — дальше, чем твой стоп-лосс ({{ result.leverage_warning.stop_loss_pct }}%). Значит стоп-лосс сработает раньше принудительного закрытия биржей — риск управляем как задумано.
+        </div>
+        {% else %}
+        <div class="error-box">
+            ⚠️ ОПАСНО: при этом плече ликвидация происходит уже на {{ result.leverage_warning.liq_move_pct }}% движения цены — ближе, чем твой стоп-лосс ({{ result.leverage_warning.stop_loss_pct }}%). Биржа принудительно закроет позицию и заберёт весь залог ДО того, как успеет сработать твой стоп-лосс. В результатах ниже это видно как сделки с причиной "liquidation".
+        </div>
+        {% endif %}
+    {% endif %}
+
     <div class="metrics">
         <div class="metric">
             <div class="value {{ 'positive' if result.summary.total_return_pct >= 0 else 'negative' }}">{{ result.summary.total_return_pct }}%</div>
@@ -117,6 +140,12 @@
             <div class="value">{{ result.summary.num_trades }}</div>
             <div class="label">Сделок</div>
         </div>
+        {% if result.summary.num_liquidations %}
+        <div class="metric">
+            <div class="value negative">{{ result.summary.num_liquidations }}</div>
+            <div class="label">Из них ликвидаций</div>
+        </div>
+        {% endif %}
         <div class="metric">
             <div class="value">{{ result.summary.win_rate_pct }}%</div>
             <div class="label">Доля прибыльных</div>
@@ -154,5 +183,10 @@ function toggleStrategyFields(value) {
     document.getElementById('rsi-fields').style.display = value === 'rsi' ? 'grid' : 'none';
 }
 toggleStrategyFields(document.querySelector('select[name=strategy]').value);
+
+function toggleLeverageField(value) {
+    document.getElementById('leverage-field').style.display = value === 'futures' ? 'block' : 'none';
+}
+toggleLeverageField(document.querySelector('select[name=market]').value);
 </script>
 {% endblock %}

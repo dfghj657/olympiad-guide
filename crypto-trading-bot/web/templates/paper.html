@@ -8,7 +8,7 @@
         Статус:
         {% if session.running %}
             <span class="status-badge status-running">запущен</span> —
-            {{ session.config.symbol }}, {{ session.config.timeframe }}, стратегия {{ strategy_labels.get(session.config.strategy, session.config.strategy) }}
+            {{ session.config.symbol }}, {{ session.config.timeframe }}, стратегия {{ strategy_labels.get(session.config.strategy, session.config.strategy) }}{% if session.config.leverage and session.config.leverage > 1 %}, плечо {{ session.config.leverage }}x{% endif %}
         {% else %}
             <span class="status-badge status-stopped">остановлен</span>
         {% endif %}
@@ -49,6 +49,17 @@
                 <label>Проверять каждые, сек</label>
                 <input name="interval_sec" type="number" value="{{ form.interval_sec }}">
             </div>
+            <div>
+                <label>Рынок</label>
+                <select name="market" onchange="toggleLeverageField(this.value)">
+                    <option value="spot" {{ "selected" if form.market == "spot" else "" }}>Спот (без плеча)</option>
+                    <option value="futures" {{ "selected" if form.market == "futures" else "" }}>Фьючерсы (с плечом)</option>
+                </select>
+            </div>
+            <div id="leverage-field">
+                <label>Плечо (x)</label>
+                <input name="leverage" type="number" step="1" min="1" value="{{ form.leverage }}">
+            </div>
         </div>
         <button type="submit">Запустить</button>
     </form>
@@ -79,5 +90,12 @@
 <script>
 // Автообновление страницы раз в 30 секунд, чтобы видеть новые сделки без ручного обновления.
 setTimeout(() => location.reload(), 30000);
+
+function toggleLeverageField(value) {
+    var el = document.getElementById('leverage-field');
+    if (el) el.style.display = value === 'futures' ? 'block' : 'none';
+}
+var marketSelect = document.querySelector('select[name=market]');
+if (marketSelect) toggleLeverageField(marketSelect.value);
 </script>
 {% endblock %}

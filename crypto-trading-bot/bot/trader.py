@@ -7,7 +7,14 @@ import ccxt
 import pandas as pd
 
 from bot.logger import setup_logger
-from bot.risk import RiskParams, position_size, stop_loss_price, take_profit_price
+from bot.risk import (
+    RiskParams,
+    liquidation_price,
+    margin_required,
+    position_size,
+    stop_loss_price,
+    take_profit_price,
+)
 from bot.strategies.base import Strategy
 
 STATE_DIR = Path(__file__).resolve().parent.parent / "state"
@@ -17,13 +24,13 @@ logger = setup_logger()
 def _state_path(symbol: str, dry_run: bool) -> Path:
     STATE_DIR.mkdir(exist_ok=True)
     tag = "paper" if dry_run else "live"
-    return STATE_DIR / f"{tag}_{symbol.replace('/', '-')}.json"
+    return STATE_DIR / f"{tag}_{symbol.replace('/', '-').replace(':', '-')}.json"
 
 
 def _trades_csv_path(symbol: str, dry_run: bool) -> Path:
     STATE_DIR.mkdir(exist_ok=True)
     tag = "paper" if dry_run else "live"
-    return STATE_DIR / f"{tag}_{symbol.replace('/', '-')}_trades.csv"
+    return STATE_DIR / f"{tag}_{symbol.replace('/', '-').replace(':', '-')}_trades.csv"
 
 
 def _load_state(path: Path, initial_capital: float) -> dict:
@@ -33,8 +40,10 @@ def _load_state(path: Path, initial_capital: float) -> dict:
         "in_position": False,
         "entry_price": 0.0,
         "qty": 0.0,
+        "margin": 0.0,
         "stop_loss": 0.0,
         "take_profit": 0.0,
+        "liquidation": 0.0,
         "balance": initial_capital,
     }
 
@@ -85,51 +94,87 @@ def run_iteration(
     if not state["in_position"]:
         should_buy = signal == 1
         if should_buy:
-            balance = state["balance"] if dry_run else exchange.fetch_balance()["free"][symbol.split("/")[1]]
+            balance = state["balance"] if dry_run else exchange.fetch_balance()["free"].get(symbol.split("/")[1].split(":")[0], 0)
             qty = position_size(balance, last_close, risk)
             if qty > 0:
                 entry_price = last_close * (1 + risk.fee_pct / 100)
+                margin = margin_required(qty, entry_price, risk)
                 if dry_run:
-                    state["balance"] -= qty * entry_price
+                    state["balance"] -= margin
                 else:
+                    if risk.leverage > 1:
+                        try:
+                            exchange.set_leverage(int(risk.leverage), symbol)
+                        except Exception:
+                            logger.exception("Could not set leverage on exchange; verify it manually before trusting this position's sizing")
                     exchange.create_market_buy_order(symbol, qty)
                 state.update({
                     "in_position": True,
                     "entry_price": entry_price,
                     "qty": qty,
+                    "margin": margin,
                     "stop_loss": stop_loss_price(entry_price, risk),
                     "take_profit": take_profit_price(entry_price, risk),
+                    "liquidation": liquidation_price(entry_price, risk),
                 })
                 action = "buy"
-                logger.info("BUY %s qty=%.6f price=%.2f", symbol, qty, entry_price)
+                logger.info("BUY %s qty=%.6f price=%.2f leverage=%sx margin=%.2f", symbol, qty, entry_price, risk.leverage, margin)
     else:
+        liq = state.get("liquidation", 0.0)
+        hit_liquidation = risk.leverage > 1 and liq > 0 and last_close <= liq
         hit_stop = last_close <= state["stop_loss"]
         hit_target = last_close >= state["take_profit"]
-        should_sell = signal == 0 or hit_stop or hit_target
+        should_sell = hit_liquidation or signal == 0 or hit_stop or hit_target
 
         if should_sell:
-            exit_price = last_close * (1 - risk.fee_pct / 100)
             qty = state["qty"]
-            if dry_run:
-                state["balance"] += qty * exit_price
-            else:
-                exchange.create_market_sell_order(symbol, qty)
+            margin = state["margin"]
 
-            reason = "stop_loss" if hit_stop else "take_profit" if hit_target else "signal"
-            return_pct = (exit_price / state["entry_price"] - 1) * 100
+            if hit_liquidation:
+                if dry_run:
+                    pass  # margin is simply gone; balance was already debited on entry
+                else:
+                    logger.warning(
+                        "Price crossed the estimated liquidation level for %s. The exchange "
+                        "may have already force-closed this position — check it manually "
+                        "before assuming our sell order below actually did anything.",
+                        symbol,
+                    )
+                    try:
+                        exchange.create_market_sell_order(symbol, qty)
+                    except Exception:
+                        logger.exception("Sell order failed, likely because the exchange already liquidated the position")
+                return_pct = -100.0
+                exit_price = liq
+                reason = "liquidation"
+            else:
+                exit_price = last_close * (1 - risk.fee_pct / 100)
+                if dry_run:
+                    dollar_pnl = qty * (exit_price - state["entry_price"])
+                    state["balance"] += margin + dollar_pnl
+                else:
+                    exchange.create_market_sell_order(symbol, qty)
+                    dollar_pnl = qty * (exit_price - state["entry_price"])
+                return_pct = (dollar_pnl / margin) * 100 if margin > 0 else 0.0
+                reason = "stop_loss" if hit_stop else "take_profit" if hit_target else "signal"
+
             _log_trade(trades_path, {
                 "timestamp": pd.Timestamp.utcnow().isoformat(),
                 "symbol": symbol,
                 "entry_price": state["entry_price"],
                 "exit_price": exit_price,
                 "qty": qty,
+                "leverage": risk.leverage,
                 "reason": reason,
                 "return_pct": round(return_pct, 3),
             })
             logger.info("SELL %s qty=%.6f price=%.2f reason=%s return=%.2f%%", symbol, qty, exit_price, reason, return_pct)
 
-            state.update({"in_position": False, "entry_price": 0.0, "qty": 0.0, "stop_loss": 0.0, "take_profit": 0.0})
-            action = "sell"
+            state.update({
+                "in_position": False, "entry_price": 0.0, "qty": 0.0, "margin": 0.0,
+                "stop_loss": 0.0, "take_profit": 0.0, "liquidation": 0.0,
+            })
+            action = "liquidated" if hit_liquidation else "sell"
 
     _save_state(state_path, state)
     return {"action": action, "signal": signal, "price": last_close, "state": state}
@@ -147,7 +192,7 @@ def run_forever(
     poll_interval_sec: int | None = None,
 ) -> None:
     mode = "PAPER" if dry_run else "LIVE"
-    logger.info("Starting %s trading: %s %s strategy=%s", mode, symbol, timeframe, strategy.name)
+    logger.info("Starting %s trading: %s %s strategy=%s leverage=%sx", mode, symbol, timeframe, strategy.name, risk.leverage)
 
     interval = poll_interval_sec or exchange.parse_timeframe(timeframe)
 
