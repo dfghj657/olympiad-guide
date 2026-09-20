@@ -12,6 +12,7 @@
         <nav>
             <a href="{{ url_for('backtest') }}" class="{{ 'active' if request.endpoint == 'backtest' else '' }}">Бэктест</a>
             <a href="{{ url_for('paper') }}" class="{{ 'active' if request.endpoint == 'paper' else '' }}">Paper-трейдинг</a>
+            <a href="{{ url_for('forecast') }}" class="{{ 'active' if request.endpoint == 'forecast' else '' }}">Проверка прогноза</a>
         </nav>
     </header>
     <main>

@@ -18,6 +18,7 @@ from flask import Flask, jsonify, redirect, render_template, request, url_for
 from bot.backtest import run_backtest
 from bot.data import fetch_ohlcv_range
 from bot.exchange import build_public_exchange, futures_symbol
+from bot.forecast import evaluate_forecast
 from bot.risk import RiskParams, is_stop_loss_safe, liquidation_price
 from bot.strategies import build_strategy
 from bot.trader import _trades_csv_path, run_iteration
@@ -101,7 +102,26 @@ DEFAULT_FORM = {
     "interval_sec": 60,
     "market": "spot",
     "leverage": 1,
+    "window": 30,
+    "horizon": 7,
 }
+
+
+def forecast_chart_base64(samples: list) -> str:
+    times = [s["time"] for s in samples]
+    fig, ax = plt.subplots(figsize=(8, 3))
+    ax.plot(times, [s["actual"] for s in samples], color="#111827", linewidth=1.6, label="Что случилось на самом деле")
+    ax.plot(times, [s["model_forecast"] for s in samples], color="#2563eb", linewidth=1.2, label="Прогноз модели")
+    ax.plot(times, [s["naive_forecast"] for s in samples], color="#9ca3af", linewidth=1.2, linestyle="--", label="Наивный прогноз («останется как есть»)")
+    ax.set_ylabel("USDT")
+    ax.legend(fontsize=8)
+    ax.grid(alpha=0.25)
+    fig.autofmt_xdate()
+    fig.tight_layout()
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=110)
+    plt.close(fig)
+    return base64.b64encode(buf.getvalue()).decode("ascii")
 
 
 @app.route("/")
@@ -152,6 +172,42 @@ def backtest():
     return render_template(
         "backtest.html", form=form_values, result=result, error=error, strategy_labels=STRATEGY_LABELS
     )
+
+
+@app.route("/forecast", methods=["GET", "POST"])
+def forecast():
+    result = None
+    error = None
+    form_values = dict(DEFAULT_FORM)
+
+    if request.method == "POST":
+        form_values.update(request.form.to_dict())
+        try:
+            exchange = build_public_exchange()
+            since_ms = int(
+                datetime.strptime(form_values["date_from"], "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp() * 1000
+            )
+            until_ms = int(
+                datetime.strptime(form_values["date_to"], "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp() * 1000
+            )
+            df = fetch_ohlcv_range(exchange, form_values["symbol"], form_values["timeframe"], since_ms, until_ms)
+            if df.empty:
+                error = "Не удалось получить исторические данные. Проверьте символ, таймфрейм и даты."
+            else:
+                window = int(form_values["window"])
+                horizon = int(form_values["horizon"])
+                fc_result = evaluate_forecast(df, window=window, horizon=horizon)
+                result = {
+                    "summary": fc_result.summary(),
+                    "chart": forecast_chart_base64(fc_result.samples[-60:]),
+                    "num_candles": len(df),
+                    "period_start": df.index[0],
+                    "period_end": df.index[-1],
+                }
+        except Exception as exc:  # surfaced to the user in the page, not a 500
+            error = f"Ошибка: {exc}"
+
+    return render_template("forecast.html", form=form_values, result=result, error=error)
 
 
 class PaperSession:

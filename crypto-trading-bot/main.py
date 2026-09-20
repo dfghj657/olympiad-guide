@@ -6,6 +6,7 @@ from bot.backtest import run_backtest
 from bot.config import ExchangeConfig
 from bot.data import fetch_ohlcv_range
 from bot.exchange import build_exchange, build_public_exchange, futures_symbol
+from bot.forecast import evaluate_forecast
 from bot.logger import setup_logger
 from bot.risk import RiskParams, is_stop_loss_safe, liquidation_price
 from bot.strategies import build_strategy
@@ -102,6 +103,36 @@ def cmd_backtest(args) -> None:
     print(f"buy_and_hold_return_pct: {round(buy_hold_pct, 2)}")
 
 
+def cmd_forecast_test(args) -> None:
+    exchange = build_public_exchange()
+    since_ms = int(datetime.strptime(args.date_from, "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp() * 1000)
+    until_ms = int(datetime.strptime(args.date_to, "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp() * 1000)
+
+    logger.info("Fetching %s %s candles from %s to %s...", args.symbol, args.timeframe, args.date_from, args.date_to)
+    df = fetch_ohlcv_range(exchange, args.symbol, args.timeframe, since_ms, until_ms)
+    if df.empty:
+        logger.error("No candles fetched, check symbol/timeframe/date range.")
+        sys.exit(1)
+
+    result = evaluate_forecast(df, window=args.window, horizon=args.horizon)
+    summary = result.summary()
+
+    print(f"\n=== Forecast test: {args.symbol} {args.timeframe} | window={args.window} horizon={args.horizon} ===")
+    print(f"Period: {df.index[0]} -> {df.index[-1]} ({len(df)} candles, {summary['num_predictions']} predictions)")
+    print(f"Linear-trend model MAE:  {summary['model_mae']}  (avg. price error, absolute)")
+    print(f"Naive (\"stays flat\") MAE: {summary['naive_mae']}")
+    print(f"Linear-trend model MAPE: {summary['model_mape_pct']}%  (avg. price error, %)")
+    print(f"Naive (\"stays flat\") MAPE: {summary['naive_mape_pct']}%")
+    print(f"Model beats the naive baseline: {summary['model_beats_naive']}")
+    print(f"Model direction accuracy: {summary['model_direction_accuracy_pct']}%  (50% = coin flip)")
+    if not summary["model_beats_naive"]:
+        print(
+            "\nHonest read: the model does NOT beat just assuming the price stays where it is. "
+            "This is the normal outcome for simple price forecasting on a liquid market — "
+            "treat this as confirmation, not a bug."
+        )
+
+
 def cmd_paper(args) -> None:
     exchange = build_public_exchange(market_type=args.market)
     symbol = resolve_symbol(args.symbol, args.market)
@@ -158,6 +189,18 @@ def main() -> None:
     p_backtest.add_argument("--from", dest="date_from", required=True, help="YYYY-MM-DD")
     p_backtest.add_argument("--to", dest="date_to", required=True, help="YYYY-MM-DD")
     p_backtest.set_defaults(func=cmd_backtest)
+
+    p_forecast = subparsers.add_parser(
+        "forecast-test",
+        help="Honestly test whether a simple price-forecasting model beats just assuming the price stays flat",
+    )
+    p_forecast.add_argument("--symbol", default="BTC/USDT")
+    p_forecast.add_argument("--timeframe", default="1d")
+    p_forecast.add_argument("--window", type=int, default=30, help="How many past candles the model sees")
+    p_forecast.add_argument("--horizon", type=int, default=7, help="How many candles ahead it predicts")
+    p_forecast.add_argument("--from", dest="date_from", required=True, help="YYYY-MM-DD")
+    p_forecast.add_argument("--to", dest="date_to", required=True, help="YYYY-MM-DD")
+    p_forecast.set_defaults(func=cmd_forecast_test)
 
     p_paper = subparsers.add_parser("paper", help="Paper trade (simulated, no real orders)")
     add_common_args(p_paper)
