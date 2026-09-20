@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Проверка прогноза — Crypto Trading Bot{% endblock %}
+{% block content %}
+
+<div class="card">
+    <h2>Честная проверка: можно ли предсказать цену по истории?</h2>
+    <p>
+        Эта страница строит простую модель прогноза (прямая линия по последним ценам, продлённая вперёд)
+        и честно сравнивает её с «наивным» прогнозом — предположением, что цена просто останется такой же, как сейчас.
+        Наивный прогноз — классический эталон в финансах, который на практике очень тяжело обыграть.
+        Если модель его не обгоняет — значит, у нее нет реального преимущества, и это нормальный, ожидаемый результат.
+    </p>
+
+    <form method="post">
+        <div class="form-grid">
+            <div>
+                <label>Монета (символ)</label>
+                <input name="symbol" value="{{ form.symbol }}">
+            </div>
+            <div>
+                <label>Таймфрейм</label>
+                <select name="timeframe">
+                    {% for tf in ["15m", "1h", "4h", "1d"] %}
+                    <option value="{{ tf }}" {{ "selected" if form.timeframe == tf else "" }}>{{ tf }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Окно (свечей в истории для модели)</label>
+                <input name="window" type="number" value="{{ form.window }}">
+            </div>
+            <div>
+                <label>Горизонт (на сколько свечей вперёд прогноз)</label>
+                <input name="horizon" type="number" value="{{ form.horizon }}">
+            </div>
+            <div>
+                <label>Дата начала</label>
+                <input name="date_from" type="date" value="{{ form.date_from }}">
+            </div>
+            <div>
+                <label>Дата конца</label>
+                <input name="date_to" type="date" value="{{ form.date_to }}">
+            </div>
+        </div>
+        <button type="submit">Проверить прогноз</button>
+    </form>
+</div>
+
+{% if error %}
+<div class="error-box">{{ error }}</div>
+{% endif %}
+
+{% if result %}
+<div class="card">
+    <h2>Результат</h2>
+    <p>Период: {{ result.period_start }} — {{ result.period_end }} ({{ result.summary.num_predictions }} прогнозов проверено)</p>
+
+    {% if result.summary.model_beats_naive %}
+    <div class="disclaimer">
+        ℹ️ В этот раз модель оказалась точнее наивного прогноза. Это не значит, что она надёжна на будущее — проверь на других периодах и монетах, прежде чем на неё полагаться.
+    </div>
+    {% else %}
+    <div class="error-box">
+        Модель <strong>не обогнала</strong> наивный прогноз «цена останется как есть». Это ожидаемый, честный результат для простого прогноза по истории — рынок не даёт себя так просто предсказать.
+    </div>
+    {% endif %}
+
+    <div class="metrics">
+        <div class="metric">
+            <div class="value">{{ result.summary.model_mape_pct }}%</div>
+            <div class="label">Средняя ошибка модели (MAPE)</div>
+        </div>
+        <div class="metric">
+            <div class="value">{{ result.summary.naive_mape_pct }}%</div>
+            <div class="label">Средняя ошибка наивного прогноза</div>
+        </div>
+        <div class="metric">
+            <div class="value">{{ result.summary.model_direction_accuracy_pct }}%</div>
+            <div class="label">Угадано направление (50% = подбрасывание монеты)</div>
+        </div>
+    </div>
+
+    <img class="chart" src="data:image/png;base64,{{ result.chart }}" alt="График: прогноз против реальности">
+    <p style="color: #6b7280; font-size: 0.85rem; margin-top: 8px;">Показаны последние 60 прогнозов из проверки — где синяя линия сильно отличается от чёрной, модель ошиблась.</p>
+</div>
+{% endif %}
+{% endblock %}

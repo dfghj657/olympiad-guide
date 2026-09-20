@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Paper-трейдинг — Crypto Trading Bot{% endblock %}
+{% block content %}
+
+<div class="card">
+    <h2>Paper-трейдинг (без реальных денег)</h2>
+    <p>
+        Статус:
+        {% if session.running %}
+            <span class="status-badge status-running">запущен</span> —
+            {{ session.config.symbol }}, {{ session.config.timeframe }}, стратегия {{ strategy_labels.get(session.config.strategy, session.config.strategy) }}{% if session.config.leverage and session.config.leverage > 1 %}, плечо {{ session.config.leverage }}x{% endif %}
+        {% else %}
+            <span class="status-badge status-stopped">остановлен</span>
+        {% endif %}
+    </p>
+
+    {% if session.running %}
+    <form method="post" action="{{ url_for('paper_stop') }}">
+        <button type="submit" class="danger">Остановить</button>
+    </form>
+    {% else %}
+    <form method="post" action="{{ url_for('paper_start') }}">
+        <div class="form-grid">
+            <div>
+                <label>Монета (символ)</label>
+                <input name="symbol" value="{{ form.symbol }}">
+            </div>
+            <div>
+                <label>Таймфрейм</label>
+                <select name="timeframe">
+                    {% for tf in ["15m", "1h", "4h", "1d"] %}
+                    <option value="{{ tf }}" {{ "selected" if form.timeframe == tf else "" }}>{{ tf }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Стратегия</label>
+                <select name="strategy">
+                    {% for key, label in strategy_labels.items() %}
+                    <option value="{{ key }}" {{ "selected" if form.strategy == key else "" }}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Стартовый баланс (USDT)</label>
+                <input name="capital" type="number" value="{{ form.capital }}">
+            </div>
+            <div>
+                <label>Проверять каждые, сек</label>
+                <input name="interval_sec" type="number" value="{{ form.interval_sec }}">
+            </div>
+            <div>
+                <label>Рынок</label>
+                <select name="market" onchange="toggleLeverageField(this.value)">
+                    <option value="spot" {{ "selected" if form.market == "spot" else "" }}>Спот (без плеча)</option>
+                    <option value="futures" {{ "selected" if form.market == "futures" else "" }}>Фьючерсы (с плечом)</option>
+                </select>
+            </div>
+            <div id="leverage-field">
+                <label>Плечо (x)</label>
+                <input name="leverage" type="number" step="1" min="1" value="{{ form.leverage }}">
+            </div>
+        </div>
+        <button type="submit">Запустить</button>
+    </form>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>Журнал сделок</h3>
+    {% if trades %}
+    <table>
+        <tr><th>Время</th><th>Символ</th><th>Вход</th><th>Выход</th><th>Причина</th><th>Результат</th></tr>
+        {% for t in trades %}
+        <tr>
+            <td>{{ t.timestamp }}</td>
+            <td>{{ t.symbol }}</td>
+            <td>{{ "%.2f"|format(t.entry_price) }}</td>
+            <td>{{ "%.2f"|format(t.exit_price) }}</td>
+            <td>{{ t.reason }}</td>
+            <td class="{{ 'positive' if t.return_pct >= 0 else 'negative' }}">{{ t.return_pct }}%</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>Пока нет закрытых сделок. Пока сделки нет, это нормально — стратегия ждёт подходящего сигнала.</p>
+    {% endif %}
+</div>
+
+<script>
+// Автообновление страницы раз в 30 секунд, чтобы видеть новые сделки без ручного обновления.
+setTimeout(() => location.reload(), 30000);
+
+function toggleLeverageField(value) {
+    var el = document.getElementById('leverage-field');
+    if (el) el.style.display = value === 'futures' ? 'block' : 'none';
+}
+var marketSelect = document.querySelector('select[name=market]');
+if (marketSelect) toggleLeverageField(marketSelect.value);
+</script>
+{% endblock %}

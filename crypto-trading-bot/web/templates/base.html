@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Crypto Trading Bot{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>🤖 Crypto Trading Bot</h1>
+        <nav>
+            <a href="{{ url_for('backtest') }}" class="{{ 'active' if request.endpoint == 'backtest' else '' }}">Бэктест</a>
+            <a href="{{ url_for('paper') }}" class="{{ 'active' if request.endpoint == 'paper' else '' }}">Paper-трейдинг</a>
+            <a href="{{ url_for('forecast') }}" class="{{ 'active' if request.endpoint == 'forecast' else '' }}">Проверка прогноза</a>
+        </nav>
+    </header>
+    <main>
+        <div class="disclaimer">
+            ⚠️ Это учебный инструмент, не финансовый совет. Прошлая доходность не гарантирует будущую. Начинайте с бэктеста и paper-трейдинга — здесь нигде не используются реальные деньги.
+        </div>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
