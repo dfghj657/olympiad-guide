@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дифференциальные уравнения | Путеводитель</title>
+    <meta name="description" content="Справочник по всем видам дифференциальных уравнений: типы, методы решения, примеры">
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+            options: { skipHtmlTags: ['script', 'style', 'textarea', 'input'] }
+        };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <style>
+        :root {
+            --sec-1: #e74c3c;
+            --sec-2: #f39c12;
+            --sec-3: #2ecc71;
+            --sec-4: #3498db;
+            --sec-5: #9b59b6;
+            --sec-6: #1abc9c;
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --bg: #ffffff;
+            --bg-light: #f9f9f9;
+            --bg-accent: #f0f8ff;
+            --bg-example: #fffbea;
+            --border: #eee;
+            --link: #3498db;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --text-dark: #e6e9ec;
+                --text-light: #9aa5ad;
+                --bg: #16191c;
+                --bg-light: #1f2327;
+                --bg-accent: #1b2733;
+                --bg-example: #2a2616;
+                --border: #2e3439;
+                --link: #5dade2;
+            }
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            color: var(--text-dark);
+            background: var(--bg);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 { margin-bottom: 10px; }
+        h2 { margin-top: 40px; }
+
+        .subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .filter-section {
+            background: var(--bg-accent);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .filter-section input[type="text"] {
+            padding: 8px;
+            width: 100%;
+            max-width: 500px;
+            box-sizing: border-box;
+        }
+
+        .filters {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 14px;
+        }
+
+        .toc {
+            columns: 2;
+            column-gap: 30px;
+            padding-left: 20px;
+        }
+
+        .card {
+            background: var(--bg-light);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .card h3 { margin-top: 0; }
+
+        .sec-1 { border-left: 5px solid var(--sec-1); }
+        .sec-2 { border-left: 5px solid var(--sec-2); }
+        .sec-3 { border-left: 5px solid var(--sec-3); }
+        .sec-4 { border-left: 5px solid var(--sec-4); }
+        .sec-5 { border-left: 5px solid var(--sec-5); }
+        .sec-6 { border-left: 5px solid var(--sec-6); }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 10px;
+            color: white;
+            vertical-align: middle;
+        }
+
+        .sec-1 .badge { background: var(--sec-1); }
+        .sec-2 .badge { background: var(--sec-2); }
+        .sec-3 .badge { background: var(--sec-3); }
+        .sec-4 .badge { background: var(--sec-4); }
+        .sec-5 .badge { background: var(--sec-5); }
+        .sec-6 .badge { background: var(--sec-6); }
+
+        .example {
+            background: var(--bg-example);
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 6px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th { background: var(--bg-accent); }
+
+        a {
+            color: var(--link);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover { text-decoration: underline; }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 15px; }
+            .card { padding: 15px; }
+            .toc { columns: 1; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>∂ Дифференциальные уравнения</h1>
+        <p class="subtitle">Все основные виды уравнений: как распознать тип и как решать</p>
+        <p><a href="olympiada">← Назад к путеводителю по олимпиадам</a></p>
+    </header>
+
+    <section class="filter-section">
+        <h2 style="margin-top: 0;">🔍 Поиск по типам</h2>
+        <input type="text" id="search" placeholder="Например: Бернулли, резонанс, Лаплас...">
+        <div class="filters">
+            <label><input type="checkbox" class="sec-filter" value="1" checked> ОДУ 1-го порядка</label>
+            <label><input type="checkbox" class="sec-filter" value="2" checked> Высшие порядки</label>
+            <label><input type="checkbox" class="sec-filter" value="3" checked> Линейные ОДУ</label>
+            <label><input type="checkbox" class="sec-filter" value="4" checked> Системы</label>
+            <label><input type="checkbox" class="sec-filter" value="5" checked> Уравнения в частных производных</label>
+            <label><input type="checkbox" class="sec-filter" value="6" checked> Прочее</label>
+        </div>
+    </section>
+
+    <section>
+        <h2 style="margin-top: 0;">🧭 Как определить тип уравнения</h2>
+        <table>
+            <tr><th>Вид уравнения</th><th>Тип</th><th>Что делать</th></tr>
+            <tr><td>\(y' = f(x)\,g(y)\)</td><td>С разделяющимися переменными</td><td>\(\int \frac{dy}{g(y)} = \int f(x)\,dx\)</td></tr>
+            <tr><td>\(y' = f\!\left(\frac{y}{x}\right)\)</td><td>Однородное</td><td>\(y = ux\)</td></tr>
+            <tr><td>\(y' + p(x)y = q(x)\)</td><td>Линейное</td><td>Интегрирующий множитель \(e^{\int p\,dx}\)</td></tr>
+            <tr><td>\(y' + p(x)y = q(x)\,y^n\)</td><td>Бернулли</td><td>\(z = y^{1-n}\)</td></tr>
+            <tr><td>\(y' = P y^2 + Q y + R\)</td><td>Риккати</td><td>Угадать \(y_1\), затем \(y = y_1 + \frac{1}{z}\)</td></tr>
+            <tr><td>\(M\,dx + N\,dy = 0,\ M_y = N_x\)</td><td>В полных дифференциалах</td><td>Найти \(F\): \(F_x = M,\ F_y = N\)</td></tr>
+            <tr><td>\(y = x y' + \psi(y')\)</td><td>Клеро</td><td>\(y = Cx + \psi(C)\) + особое решение</td></tr>
+            <tr><td>\(F(x, y', y'') = 0\)</td><td>Нет \(y\)</td><td>\(y' = p(x)\)</td></tr>
+            <tr><td>\(F(y, y', y'') = 0\)</td><td>Нет \(x\)</td><td>\(y' = p(y),\ y'' = p\,\frac{dp}{dy}\)</td></tr>
+            <tr><td>\(a y'' + b y' + c y = f(x)\)</td><td>Линейное с постоянными коэффициентами</td><td>Характеристическое уравнение + частное решение</td></tr>
+            <tr><td>\(x^2 y'' + a x y' + b y = f(x)\)</td><td>Эйлера</td><td>\(x = e^t\) или \(y = x^k\)</td></tr>
+            <tr><td>\(\vec{x}\,' = A\vec{x}\)</td><td>Линейная система</td><td>Собственные числа и векторы \(A\)</td></tr>
+            <tr><td>\(u_{tt} = a^2 u_{xx}\)</td><td>Волновое (гиперболическое)</td><td>Даламбер или метод Фурье</td></tr>
+            <tr><td>\(u_t = a^2 u_{xx}\)</td><td>Теплопроводности (параболическое)</td><td>Метод Фурье</td></tr>
+            <tr><td>\(u_{xx} + u_{yy} = 0\)</td><td>Лапласа (эллиптическое)</td><td>Разделение переменных, формула Пуассона</td></tr>
+        </table>
+    </section>
+
+    <section>
+        <h2>📚 Содержание</h2>
+        <ol class="toc" id="toc"></ol>
+    </section>
+
+    <main>
+        <!-- ===================== I. ОДУ ПЕРВОГО ПОРЯДКА ===================== -->
+        <h2 class="sec-title" data-sec="1">I. Уравнения первого порядка</h2>
+
+        <div class="card sec-1" data-sec="1" id="cauchy">
+            <h3>Основные понятия и задача Коши <span class="badge">1-й порядок</span></h3>
+            <p><strong>Общий вид:</strong> \(F(x, y, y') = 0\) или в нормальной форме \(y' = f(x, y)\).</p>
+            <p><strong>Задача Коши:</strong> найти решение с условием \(y(x_0) = y_0\).</p>
+            <p><strong>Теорема существования и единственности (Пикар):</strong> если \(f\) и \(\frac{\partial f}{\partial y}\) непрерывны в окрестности точки \((x_0, y_0)\), то решение задачи Коши существует и единственно в некоторой окрестности \(x_0\).</p>
+            <p><strong>Общее решение</strong> — семейство \(y = \varphi(x, C)\); <strong>частное</strong> — при конкретном \(C\); <strong>особое</strong> — решение, в каждой точке которого нарушается единственность (огибающая семейства).</p>
+            <div class="example"><strong>Пример нарушения единственности:</strong> \(y' = 2\sqrt{y}\), \(y(0) = 0\): решения \(y \equiv 0\) и \(y = x^2\) при \(x \ge 0\).</div>
+        </div>
+
+        <div class="card sec-1" data-sec="1" id="separable">
+            <h3>С разделяющимися переменными <span class="badge">1-й порядок</span></h3>
+            <p><strong>Вид:</strong> \(y' = f(x)\,g(y)\) или \(M_1(x)N_1(y)\,dx + M_2(x)N_2(y)\,dy = 0\).</p>
+            <p><strong>Метод:</strong> разделить переменные и проинтегрировать:</p>
+            \[\int \frac{dy}{g(y)} = \int f(x)\,dx + C.\]
+            <p>⚠ Не забудьте решения \(g(y) = 0\) — они могли потеряться при делении.</p>
+            <p><strong>Приводящиеся:</strong> \(y' = f(ax + by + c)\) — замена \(z = ax + by + c\), тогда \(z' = a + b f(z)\).</p>
+            <div class="example"><strong>Пример:</strong> \(y' = xy\). \(\frac{dy}{y} = x\,dx \Rightarrow \ln|y| = \frac{x^2}{2} + C \Rightarrow y = Ce^{x^2/2}\) (включая \(y \equiv 0\) при \(C = 0\)).</div>
+        </div>
+
+        <div class="card sec-1" data-sec="1" id="homogeneous">
+            <h3>Однородные уравнения <span class="badge">1-й порядок</span></h3>
+            <p><strong>Вид:</strong> \(y' = f\!\left(\frac{y}{x}\right)\), или \(M\,dx + N\,dy = 0\), где \(M, N\) — однородные функции одной степени: \(M(tx, ty) = t^k M(x, y)\).</p>
+            <p><strong>Метод:</strong> замена \(y = ux\), \(y' = u + xu'\) даёт уравнение с разделяющимися переменными:</p>
+            \[x\,u' = f(u) - u.\]
+            <p><strong>Приводящиеся к однородным:</strong> \(y' = f\!\left(\frac{a_1x + b_1y + c_1}{a_2x + b_2y + c_2}\right)\).</p>
+            <ul>
+                <li>Если \(a_1b_2 - a_2b_1 \ne 0\): сдвиг \(x = X + x_0,\ y = Y + y_0\), где \((x_0, y_0)\) — точка пересечения прямых \(a_ix + b_iy + c_i = 0\).</li>
+                <li>Если \(a_1b_2 - a_2b_1 = 0\): замена \(z = a_1x + b_1y\) — разделяющиеся переменные.</li>
+            </ul>
+            <div class="example"><strong>Пример:</strong> \(y' = \frac{x + y}{x}\). \(u + xu' = 1 + u \Rightarrow u' = \frac1x \Rightarrow u = \ln|x| + C \Rightarrow y = x(\ln|x| + C)\).</div>
+        </div>
+
+        <div class="card sec-1" data-sec="1" id="linear1">
+            <h3>Линейные уравнения первого порядка <span class="badge">1-й порядок</span></h3>
+            <p><strong>Вид:</strong> \(y' + p(x)\,y = q(x)\).</p>
+            <p><strong>Способ 1 — интегрирующий множитель:</strong> умножить на \(\mu = e^{\int p\,dx}\), тогда левая часть — \((\mu y)'\):</p>
+            \[y = e^{-\int p\,dx}\left(\int q\,e^{\int p\,dx}\,dx + C\right).\]
+            <p><strong>Способ 2 — Бернулли:</strong> \(y = u(x)\,v(x)\); \(v\) выбирают из \(v' + pv = 0\), затем \(u' v = q\).</p>
+            <p><strong>Способ 3 — вариация постоянной (Лагранжа):</strong> решить однородное \(y = Ce^{-\int p\,dx}\), затем считать \(C = C(x)\) и подставить.</p>
+            <div class="example"><strong>Пример:</strong> \(y' + \frac{y}{x} = x^2\). \(\mu = x\): \((xy)' = x^3 \Rightarrow xy = \frac{x^4}{4} + C \Rightarrow y = \frac{x^3}{4} + \frac{C}{x}\).</div>
+        </div>
+
+        <div class="card sec-1" data-sec="1" id="bernoulli">
+            <h3>Уравнение Бернулли <span class="badge">1-й порядок</span></h3>
+            <p><strong>Вид:</strong> \(y' + p(x)\,y = q(x)\,y^n\), \(n \ne 0, 1\).</p>
+            <p><strong>Метод:</strong> разделить на \(y^n\) и сделать замену \(z = y^{1-n}\) — получится линейное:</p>
+            \[z' + (1-n)\,p(x)\,z = (1-n)\,q(x).\]
+            <p>При \(n > 0\) не забудьте решение \(y \equiv 0\). Можно решать и сразу подстановкой \(y = uv\).</p>
+            <div class="example"><strong>Пример:</strong> \(y' + y = xy^2\). \(z = \frac1y\): \(z' - z = -x\). \((ze^{-x})' = -xe^{-x} \Rightarrow ze^{-x} = (x+1)e^{-x} + C\). Ответ: \(y = \frac{1}{x + 1 + Ce^{x}}\), а также \(y \equiv 0\).</div>
+        </div>
+
+        <div class="card sec-1" data-sec="1" id="riccati">
+            <h3>Уравнение Риккати <span class="badge">1-й порядок</span></h3>
+            <p><strong>Вид:</strong> \(y' = P(x)\,y^2 + Q(x)\,y + R(x)\).</p>
+            <p>В общем случае в квадратурах <em>не решается</em>. Но если известно одно частное решение \(y_1\) (обычно угадывают в виде \(\frac{a}{x}\), \(ax + b\), \(e^{ax}\)…), то замена</p>
+            \[y = y_1 + \frac{1}{z}\]
+            <p>сводит его к линейному уравнению \(z' = -(2Py_1 + Q)\,z - P\).</p>
+            <p>Замена \(y = -\frac{u'}{P u}\) сводит Риккати к линейному уравнению 2-го порядка.</p>
+            <div class="example"><strong>Пример:</strong> \(y' = y^2 - \frac{2}{x^2}\). Ищем \(y_1 = \frac{a}{x}\): \(-a = a^2 - 2 \Rightarrow a = 1\). Подстановка \(y = \frac1x + \frac1z\) даёт \(z' + \frac{2}{x}z = -1 \Rightarrow z = -\frac{x}{3} + \frac{C}{x^2}\). Ответ: \(y = \frac1x + \frac{3x^2}{3C - x^3}\).</div>
+        </div>
+
+        <div class="card sec-1" data-sec="1" id="exact">
+            <h3>Уравнения в полных дифференциалах <span class="badge">1-й порядок</span></h3>
+            <p><strong>Вид:</strong> \(M(x,y)\,dx + N(x,y)\,dy = 0\), где \(\dfrac{\partial M}{\partial y} = \dfrac{\partial N}{\partial x}\).</p>
+            <p><strong>Метод:</strong> существует \(F\) с \(dF = M\,dx + N\,dy\), решение: \(F(x, y) = C\).</p>
+            \[F = \int M\,dx + \varphi(y),\qquad \varphi'(y) = N - \frac{\partial}{\partial y}\int M\,dx.\]
+            <div class="example"><strong>Пример:</strong> \((2xy + 1)\,dx + (x^2 + 2y)\,dy = 0\). \(M_y = 2x = N_x\). \(F = x^2y + x + \varphi(y)\), \(\varphi' = 2y\). Ответ: \(x^2y + x + y^2 = C\).</div>
+        </div>
+
+        <div class="card sec-1" data-sec="1" id="integrating-factor">
+            <h3>Интегрирующий множитель <span class="badge">1-й порядок</span></h3>
+            <p>Если \(M_y \ne N_x\), ищем \(\mu\), при котором \(\mu M\,dx + \mu N\,dy = 0\) — в полных дифференциалах.</p>
+            <ul>
+                <li>\(\mu = \mu(x)\), если \(\dfrac{M_y - N_x}{N}\) зависит только от \(x\): \(\mu = \exp\!\int \dfrac{M_y - N_x}{N}\,dx\).</li>
+                <li>\(\mu = \mu(y)\), если \(\dfrac{N_x - M_y}{M}\) зависит только от \(y\): \(\mu = \exp\!\int \dfrac{N_x - M_y}{M}\,dy\).</li>
+                <li>Полезные комбинации: \(d(xy) = y\,dx + x\,dy\), \(d\!\left(\frac{y}{x}\right) = \frac{x\,dy - y\,dx}{x^2}\), \(d\ln\frac{y}{x}\), \(d\arctan\frac{y}{x} = \frac{x\,dy - y\,dx}{x^2 + y^2}\), \(d\frac{x^2+y^2}{2} = x\,dx + y\,dy\).</li>
+            </ul>
+            <div class="example"><strong>Пример:</strong> \((x^2 + y)\,dx - x\,dy = 0\). \(\frac{M_y - N_x}{N} = \frac{2}{-x}\), \(\mu = x^{-2}\). Получаем \(d\!\left(x - \frac{y}{x}\right) = 0\). Ответ: \(y = x^2 - Cx\).</div>
+        </div>
+
+        <div class="card sec-1" data-sec="1" id="implicit">
+            <h3>Не разрешённые относительно производной. Лагранж и Клеро <span class="badge">1-й порядок</span></h3>
+            <p><strong>Вид:</strong> \(F(x, y, y') = 0\). Обозначаем \(p = y'\) и вводим параметр.</p>
+            <ul>
+                <li><strong>\(y = f(x, p)\)</strong>: продифференцировать по \(x\): \(p = f_x + f_p\,\frac{dp}{dx}\) — уравнение на \(p(x)\).</li>
+                <li><strong>\(x = f(y, p)\)</strong>: дифференцировать по \(y\): \(\frac1p = f_y + f_p\,\frac{dp}{dy}\).</li>
+            </ul>
+            <p><strong>Уравнение Лагранжа:</strong> \(y = x\,\varphi(y') + \psi(y')\). После дифференцирования получается <em>линейное</em> уравнение относительно \(x(p)\):</p>
+            \[\big(p - \varphi(p)\big)\frac{dx}{dp} - \varphi'(p)\,x = \psi'(p).\]
+            <p><strong>Уравнение Клеро</strong> (\(\varphi(p) = p\)): \(y = xy' + \psi(y')\).</p>
+            <ul>
+                <li>Общее решение — семейство прямых: \(y = Cx + \psi(C)\).</li>
+                <li>Особое решение (огибающая) параметрически: \(x = -\psi'(p),\ y = -p\,\psi'(p) + \psi(p)\).</li>
+            </ul>
+            <p><strong>Особые решения</strong> ищут через \(p\)-дискриминант: исключить \(p\) из \(F = 0,\ \frac{\partial F}{\partial p} = 0\) и проверить подстановкой.</p>
+            <div class="example"><strong>Пример:</strong> \(y = xy' + (y')^2\). Общее: \(y = Cx + C^2\). Особое: \(x = -2p,\ y = -p^2 \Rightarrow y = -\frac{x^2}{4}\).</div>
+        </div>
+
+        <!-- ===================== II. ВЫСШИЕ ПОРЯДКИ ===================== -->
+        <h2 class="sec-title" data-sec="2">II. Уравнения высших порядков: понижение порядка</h2>
+
+        <div class="card sec-2" data-sec="2" id="direct">
+            <h3>\(y^{(n)} = f(x)\) <span class="badge">понижение порядка</span></h3>
+            <p><strong>Метод:</strong> \(n\) раз проинтегрировать; появятся \(n\) констант. Формула Коши:</p>
+            \[y = \frac{1}{(n-1)!}\int_{x_0}^{x}(x - t)^{n-1} f(t)\,dt + C_1x^{n-1} + \dots + C_n.\]
+            <div class="example"><strong>Пример:</strong> \(y'' = \sin x \Rightarrow y = -\sin x + C_1x + C_2\).</div>
+        </div>
+
+        <div class="card sec-2" data-sec="2" id="no-y">
+            <h3>Нет искомой функции: \(F(x, y^{(k)}, \dots, y^{(n)}) = 0\) <span class="badge">понижение порядка</span></h3>
+            <p><strong>Метод:</strong> замена \(z(x) = y^{(k)}\) понижает порядок на \(k\).</p>
+            <div class="example"><strong>Пример:</strong> \(xy'' = y'\). \(p = y'\): \(xp' = p \Rightarrow p = C_1x \Rightarrow y = \frac{C_1x^2}{2} + C_2\).</div>
+        </div>
+
+        <div class="card sec-2" data-sec="2" id="no-x">
+            <h3>Нет независимой переменной: \(F(y, y', y'') = 0\) <span class="badge">понижение порядка</span></h3>
+            <p><strong>Метод:</strong> считаем \(y' = p(y)\) функцией от \(y\):</p>
+            \[y'' = p\,\frac{dp}{dy},\qquad y''' = p\,\frac{d}{dy}\!\left(p\,\frac{dp}{dy}\right).\]
+            <p>Частный случай — <strong>\(y'' = f(y)\)</strong> (закон Ньютона): домножить на \(y'\) — «интеграл энергии» \(\frac{(y')^2}{2} = \int f(y)\,dy + C_1\).</p>
+            <div class="example"><strong>Пример:</strong> \(yy'' = (y')^2\). \(yp\,\frac{dp}{dy} = p^2 \Rightarrow p = C_1y \Rightarrow y = C_2e^{C_1x}\).</div>
+        </div>
+
+        <div class="card sec-2" data-sec="2" id="homog-y">
+            <h3>Однородные относительно \(y, y', y''\) <span class="badge">понижение порядка</span></h3>
+            <p><strong>Вид:</strong> \(F(x, ty, ty', ty'') = t^k F(x, y, y', y'')\).</p>
+            <p><strong>Метод:</strong> замена \(y' = y\,z(x)\), тогда \(y'' = y(z' + z^2)\); \(y\) сокращается.</p>
+            <p><strong>Точная производная:</strong> если левую часть можно записать как \(\frac{d}{dx}\Phi(x, y, y') = 0\), то \(\Phi = C_1\) — порядок понижен.</p>
+            <div class="example"><strong>Пример:</strong> \(yy'' + (y')^2 = 0\) — это \((yy')' = 0\), откуда \(yy' = C_1\), \(y^2 = C_1x + C_2\).</div>
+        </div>
+
+        <!-- ===================== III. ЛИНЕЙНЫЕ ОДУ ===================== -->
+        <h2 class="sec-title" data-sec="3">III. Линейные уравнения n-го порядка</h2>
+
+        <div class="card sec-3" data-sec="3" id="linear-theory">
+            <h3>Структура решения. Вронскиан <span class="badge">линейные</span></h3>
+            <p><strong>Вид:</strong> \(y^{(n)} + p_1(x)y^{(n-1)} + \dots + p_n(x)y = f(x)\).</p>
+            <ul>
+                <li>Решения однородного уравнения (\(f = 0\)) образуют \(n\)-мерное линейное пространство; базис — <strong>фундаментальная система решений (ФСР)</strong> \(y_1, \dots, y_n\).</li>
+                <li><strong>Общее решение неоднородного</strong> = общее решение однородного + любое частное: \(y = C_1y_1 + \dots + C_ny_n + y_{\text{ч}}\).</li>
+                <li><strong>Принцип суперпозиции:</strong> если \(f = f_1 + f_2\), то \(y_{\text{ч}} = y_{\text{ч}1} + y_{\text{ч}2}\).</li>
+                <li><strong>Вронскиан</strong> \(W = \det\big(y_j^{(i)}\big)\): решения линейно независимы \(\iff W \ne 0\).</li>
+                <li><strong>Формула Лиувилля–Остроградского:</strong> \(W(x) = W(x_0)\,\exp\!\left(-\int_{x_0}^x p_1(t)\,dt\right)\).</li>
+            </ul>
+            <p><strong>Понижение порядка при известном решении \(y_1\)</strong> уравнения \(y'' + p y' + q y = 0\):</p>
+            \[y_2 = y_1 \int \frac{e^{-\int p\,dx}}{y_1^2}\,dx.\]
+        </div>
+
+        <div class="card sec-3" data-sec="3" id="const-coef">
+            <h3>Однородные с постоянными коэффициентами <span class="badge">линейные</span></h3>
+            <p><strong>Вид:</strong> \(a_0y^{(n)} + a_1y^{(n-1)} + \dots + a_ny = 0\), \(a_i = \text{const}\).</p>
+            <p>Ищем \(y = e^{\lambda x}\) → <strong>характеристическое уравнение</strong> \(a_0\lambda^n + a_1\lambda^{n-1} + \dots + a_n = 0\).</p>
+            <table>
+                <tr><th>Корни</th><th>Вклад в ФСР</th></tr>
+                <tr><td>Вещественный \(\lambda\) кратности 1</td><td>\(e^{\lambda x}\)</td></tr>
+                <tr><td>Вещественный \(\lambda\) кратности \(k\)</td><td>\(e^{\lambda x},\ xe^{\lambda x},\ \dots,\ x^{k-1}e^{\lambda x}\)</td></tr>
+                <tr><td>Пара \(\alpha \pm i\beta\)</td><td>\(e^{\alpha x}\cos\beta x,\ e^{\alpha x}\sin\beta x\)</td></tr>
+                <tr><td>Пара \(\alpha \pm i\beta\) кратности \(k\)</td><td>\(x^j e^{\alpha x}\cos\beta x,\ x^j e^{\alpha x}\sin\beta x,\ j = 0..k-1\)</td></tr>
+            </table>
+            <div class="example">
+                <strong>Примеры:</strong><br>
+                \(y'' - 3y' + 2y = 0\): \(\lambda = 1, 2\) → \(y = C_1e^x + C_2e^{2x}\).<br>
+                \(y'' + 2y' + y = 0\): \(\lambda = -1\) (кратный) → \(y = (C_1 + C_2x)e^{-x}\).<br>
+                \(y'' + 2y' + 5y = 0\): \(\lambda = -1 \pm 2i\) → \(y = e^{-x}(C_1\cos 2x + C_2\sin 2x)\).<br>
+                \(y'' + \omega^2 y = 0\) (гармонический осциллятор) → \(y = C_1\cos\omega x + C_2\sin\omega x\).
+            </div>
+        </div>
+
+        <div class="card sec-3" data-sec="3" id="undetermined">
+            <h3>Неоднородные: метод неопределённых коэффициентов <span class="badge">линейные</span></h3>
+            <p>Работает при постоянных коэффициентах и <strong>специальной правой части</strong>:</p>
+            \[f(x) = e^{\alpha x}\big(P_m(x)\cos\beta x + Q_l(x)\sin\beta x\big).\]
+            <p>Частное решение ищем в виде</p>
+            \[y_{\text{ч}} = x^{s}\,e^{\alpha x}\big(R_k(x)\cos\beta x + T_k(x)\sin\beta x\big),\quad k = \max(m, l),\]
+            <p>где \(s\) — кратность числа \(\alpha + i\beta\) как корня характеристического уравнения (\(s = 0\), если не корень). Случай \(s > 0\) — <strong>резонанс</strong>.</p>
+            <table>
+                <tr><th>Правая часть</th><th>Вид частного решения (без резонанса)</th></tr>
+                <tr><td>\(P_m(x)\)</td><td>\(R_m(x)\)</td></tr>
+                <tr><td>\(Ae^{\alpha x}\)</td><td>\(Be^{\alpha x}\)</td></tr>
+                <tr><td>\(A\cos\beta x + B\sin\beta x\)</td><td>\(C\cos\beta x + D\sin\beta x\)</td></tr>
+                <tr><td>\(P_m(x)e^{\alpha x}\)</td><td>\(R_m(x)e^{\alpha x}\)</td></tr>
+            </table>
+            <div class="example"><strong>Пример (резонанс):</strong> \(y'' - 3y' + 2y = e^x\). \(\alpha = 1\) — простой корень, \(s = 1\): \(y_{\text{ч}} = Axe^x\). Подстановка: \(-A = 1\). Ответ: \(y = C_1e^x + C_2e^{2x} - xe^x\).</div>
+        </div>
+
+        <div class="card sec-3" data-sec="3" id="variation">
+            <h3>Неоднородные: вариация постоянных (Лагранжа) <span class="badge">линейные</span></h3>
+            <p>Универсальный метод для любой правой части (и переменных коэффициентов), если известна ФСР.</p>
+            <p>Для \(y'' + p(x)y' + q(x)y = f(x)\) ищем \(y = C_1(x)y_1 + C_2(x)y_2\), где</p>
+            \[\begin{cases} C_1'y_1 + C_2'y_2 = 0,\\ C_1'y_1' + C_2'y_2' = f(x), \end{cases}\qquad C_1' = -\frac{y_2 f}{W},\quad C_2' = \frac{y_1 f}{W}.\]
+            <p>Для порядка \(n\): первые \(n-1\) уравнений системы равны нулю, последнее — \(\sum C_i' y_i^{(n-1)} = f\) (при старшем коэффициенте 1).</p>
+            <div class="example"><strong>Пример:</strong> \(y'' + y = \frac{1}{\cos x}\). \(y_1 = \cos x,\ y_2 = \sin x,\ W = 1\). \(C_1' = -\tan x \Rightarrow C_1 = \ln|\cos x|\); \(C_2' = 1 \Rightarrow C_2 = x\). Ответ: \(y = C_1\cos x + C_2\sin x + \cos x\ln|\cos x| + x\sin x\).</div>
+        </div>
+
+        <div class="card sec-3" data-sec="3" id="euler">
+            <h3>Уравнение Эйлера <span class="badge">линейные</span></h3>
+            <p><strong>Вид:</strong> \(a_0x^ny^{(n)} + a_1x^{n-1}y^{(n-1)} + \dots + a_ny = f(x)\), \(a_i = \text{const}\).</p>
+            <p><strong>Метод:</strong> замена \(x = e^t\) (при \(x > 0\)) даёт уравнение с постоянными коэффициентами. Для однородного проще сразу искать \(y = x^k\):</p>
+            \[x^2y'' + axy' + by = 0 \ \Rightarrow\ k(k-1) + ak + b = 0.\]
+            <table>
+                <tr><th>Корни \(k\)</th><th>Решения</th></tr>
+                <tr><td>различные вещественные</td><td>\(x^{k_1},\ x^{k_2}\)</td></tr>
+                <tr><td>кратный</td><td>\(x^{k},\ x^{k}\ln x\)</td></tr>
+                <tr><td>\(\alpha \pm i\beta\)</td><td>\(x^{\alpha}\cos(\beta\ln x),\ x^{\alpha}\sin(\beta\ln x)\)</td></tr>
+            </table>
+            <p>Обобщение: \((ax + b)^n y^{(n)} + \dots\) — замена \(ax + b = e^t\).</p>
+            <div class="example"><strong>Пример:</strong> \(x^2y'' - 2xy' + 2y = 0\). \(k^2 - 3k + 2 = 0\), \(k = 1, 2\). Ответ: \(y = C_1x + C_2x^2\).</div>
+        </div>
+
+        <div class="card sec-3" data-sec="3" id="series">
+            <h3>Решение степенными рядами. Специальные функции <span class="badge">линейные</span></h3>
+            <p>Для \(y'' + p(x)y' + q(x)y = 0\):</p>
+            <ul>
+                <li><strong>Обыкновенная точка</strong> (\(p, q\) аналитичны в \(x_0\)): ищем \(y = \sum a_k(x - x_0)^k\), получаем рекуррентную формулу для \(a_k\).</li>
+                <li><strong>Регулярная особая точка</strong> (\((x-x_0)p\) и \((x-x_0)^2q\) аналитичны) — <strong>метод Фробениуса</strong>: \(y = (x-x_0)^r\sum a_k(x-x_0)^k\), где \(r\) — корень определяющего уравнения \(r(r-1) + p_0r + q_0 = 0\).</li>
+            </ul>
+            <table>
+                <tr><th>Уравнение</th><th>Решения</th></tr>
+                <tr><td>Бесселя: \(x^2y'' + xy' + (x^2 - \nu^2)y = 0\)</td><td>\(J_\nu(x),\ Y_\nu(x)\)</td></tr>
+                <tr><td>Лежандра: \((1 - x^2)y'' - 2xy' + n(n+1)y = 0\)</td><td>многочлены \(P_n(x)\)</td></tr>
+                <tr><td>Эрмита: \(y'' - 2xy' + 2ny = 0\)</td><td>многочлены \(H_n(x)\)</td></tr>
+                <tr><td>Эйри: \(y'' - xy = 0\)</td><td>\(\mathrm{Ai}(x),\ \mathrm{Bi}(x)\)</td></tr>
+                <tr><td>Гипергеометрическое Гаусса: \(x(1-x)y'' + [c - (a+b+1)x]y' - aby = 0\)</td><td>\({}_2F_1(a, b; c; x)\)</td></tr>
+            </table>
+            <div class="example"><strong>Пример:</strong> \(y'' + y = 0\), \(y = \sum a_kx^k\): \(a_{k+2} = -\frac{a_k}{(k+1)(k+2)}\) — получаются ряды для \(\cos x\) и \(\sin x\).</div>
+        </div>
+
+        <div class="card sec-3" data-sec="3" id="boundary">
+            <h3>Краевые задачи. Задача Штурма–Лиувилля <span class="badge">линейные</span></h3>
+            <p>Условия задаются в двух точках: \(y(a) = A,\ y(b) = B\) (или на производные). Решение может не существовать или быть не единственным.</p>
+            <p><strong>Задача Штурма–Лиувилля:</strong> \(-(p(x)y')' + q(x)y = \lambda\,r(x)y\) с однородными краевыми условиями. Собственные значения вещественны, \(\lambda_1 \lt \lambda_2 \lt \dots \to \infty\), собственные функции ортогональны с весом \(r\).</p>
+            <div class="example"><strong>Пример:</strong> \(y'' + \lambda y = 0,\ y(0) = y(l) = 0\): \(\lambda_n = \left(\frac{\pi n}{l}\right)^2\), \(y_n = \sin\frac{\pi n x}{l}\) — основа метода Фурье.</div>
+        </div>
+
+        <!-- ===================== IV. СИСТЕМЫ ===================== -->
+        <h2 class="sec-title" data-sec="4">IV. Системы дифференциальных уравнений</h2>
+
+        <div class="card sec-4" data-sec="4" id="elimination">
+            <h3>Метод исключения. Первые интегралы <span class="badge">системы</span></h3>
+            <p><strong>Исключение:</strong> выразить одну неизвестную из одного уравнения, подставить в другое → одно уравнение более высокого порядка.</p>
+            <p><strong>Первые интегралы:</strong> для системы в симметричной форме \(\frac{dx}{X} = \frac{dy}{Y} = \frac{dz}{Z}\) ищем интегрируемые комбинации (свойство равных дробей: \(\frac{dx + dy}{X + Y}\), \(\frac{x\,dx + y\,dy}{xX + yY}\) и т. п.).</p>
+            <div class="example"><strong>Пример:</strong> \(x' = y,\ y' = -x\). Отсюда \(x'' = -x\): \(x = C_1\cos t + C_2\sin t\), \(y = x'\). Первый интеграл: \(x^2 + y^2 = C\).</div>
+        </div>
+
+        <div class="card sec-4" data-sec="4" id="linear-systems">
+            <h3>Линейные системы с постоянными коэффициентами <span class="badge">системы</span></h3>
+            <p><strong>Вид:</strong> \(\vec{x}\,' = A\vec{x} + \vec{f}(t)\).</p>
+            <p><strong>Метод Эйлера:</strong> ищем \(\vec{x} = \vec{v}e^{\lambda t}\), где \(\det(A - \lambda E) = 0\), \((A - \lambda E)\vec{v} = 0\).</p>
+            <ul>
+                <li><strong>Разные вещественные \(\lambda_i\)</strong>: \(\vec{x} = \sum C_i\vec{v}_ie^{\lambda_it}\).</li>
+                <li><strong>Комплексные \(\lambda = \alpha \pm i\beta\)</strong>: берём \(\mathrm{Re}\) и \(\mathrm{Im}\) от \(\vec{v}e^{\lambda t}\).</li>
+                <li><strong>Кратный \(\lambda\) без полного набора векторов</strong>: \(\vec{x}_2 = (\vec{v}t + \vec{w})e^{\lambda t}\), где \((A - \lambda E)\vec{w} = \vec{v}\) (присоединённый вектор).</li>
+            </ul>
+            <p><strong>Матричная экспонента:</strong> \(\vec{x}(t) = e^{At}\vec{x}_0 + \int_0^t e^{A(t-s)}\vec{f}(s)\,ds\), \(e^{At} = \sum\frac{(At)^k}{k!}\) (удобно считать через жорданову форму).</p>
+            <div class="example"><strong>Пример:</strong> \(x' = x + 2y,\ y' = 2x + y\). \(\lambda_1 = 3,\ \vec{v}_1 = (1, 1)\); \(\lambda_2 = -1,\ \vec{v}_2 = (1, -1)\). \(\begin{pmatrix}x\\y\end{pmatrix} = C_1e^{3t}\begin{pmatrix}1\\1\end{pmatrix} + C_2e^{-t}\begin{pmatrix}1\\-1\end{pmatrix}\).</div>
+        </div>
+
+        <div class="card sec-4" data-sec="4" id="phase">
+            <h3>Фазовая плоскость и особые точки <span class="badge">системы</span></h3>
+            <p>Для системы \(\vec{x}\,' = A\vec{x}\), \(A\) — матрица \(2\times2\), \(\tau = \mathrm{tr}\,A\), \(\Delta = \det A\):</p>
+            <table>
+                <tr><th>Условие</th><th>Тип точки покоя</th></tr>
+                <tr><td>\(\Delta \lt 0\)</td><td>Седло (неустойчиво)</td></tr>
+                <tr><td>\(\Delta \gt 0,\ \tau^2 \gt 4\Delta\)</td><td>Узел (устойчив при \(\tau \lt 0\))</td></tr>
+                <tr><td>\(\Delta \gt 0,\ \tau^2 = 4\Delta\)</td><td>Вырожденный или дикритический узел</td></tr>
+                <tr><td>\(\Delta \gt 0,\ \tau^2 \lt 4\Delta,\ \tau \ne 0\)</td><td>Фокус (устойчив при \(\tau \lt 0\))</td></tr>
+                <tr><td>\(\Delta \gt 0,\ \tau = 0\)</td><td>Центр (устойчив, но не асимптотически)</td></tr>
+                <tr><td>\(\Delta = 0\)</td><td>Вырожденный случай: прямая из точек покоя</td></tr>
+            </table>
+        </div>
+
+        <div class="card sec-4" data-sec="4" id="stability">
+            <h3>Устойчивость по Ляпунову <span class="badge">системы</span></h3>
+            <p>Для нелинейной системы \(\vec{x}\,' = \vec{F}(\vec{x})\) с точкой покоя \(\vec{x}_0\) рассматриваем линеаризацию с матрицей Якоби \(J = \frac{\partial \vec F}{\partial \vec x}(\vec{x}_0)\).</p>
+            <ul>
+                <li><strong>Теорема об устойчивости по первому приближению:</strong> все \(\mathrm{Re}\,\lambda_i \lt 0\) → асимптотически устойчива; есть \(\mathrm{Re}\,\lambda_i \gt 0\) → неустойчива. Если есть \(\mathrm{Re}\,\lambda = 0\) — нужен дополнительный анализ.</li>
+                <li><strong>Функция Ляпунова</strong> \(V(\vec{x}) \gt 0\) (при \(\vec x \ne \vec x_0\)) с \(\dot V = \nabla V\cdot\vec{F} \le 0\) → устойчивость; \(\dot V \lt 0\) → асимптотическая устойчивость.</li>
+                <li><strong>Критерий Рауса–Гурвица</strong> для \(\lambda^2 + a_1\lambda + a_2\): устойчиво \(\iff a_1 \gt 0,\ a_2 \gt 0\); для \(\lambda^3 + a_1\lambda^2 + a_2\lambda + a_3\): \(a_i \gt 0,\ a_1a_2 \gt a_3\).</li>
+            </ul>
+            <div class="example"><strong>Пример:</strong> маятник с трением \(\ddot\theta + k\dot\theta + \sin\theta = 0\), \(k \gt 0\): \(V = \frac{\dot\theta^2}{2} + 1 - \cos\theta\), \(\dot V = -k\dot\theta^2 \le 0\) — нижнее положение устойчиво.</div>
+        </div>
+
+        <!-- ===================== V. УЧП ===================== -->
+        <h2 class="sec-title" data-sec="5">V. Уравнения в частных производных</h2>
+
+        <div class="card sec-5" data-sec="5" id="pde1">
+            <h3>Уравнения первого порядка. Метод характеристик <span class="badge">УЧП</span></h3>
+            <p><strong>Линейное однородное:</strong> \(a(x, y)u_x + b(x, y)u_y = 0\). Находим первый интеграл \(\psi(x, y) = C\) уравнения \(\frac{dx}{a} = \frac{dy}{b}\); общее решение \(u = F(\psi(x, y))\), \(F\) — произвольная функция.</p>
+            <p><strong>Квазилинейное:</strong> \(a\,u_x + b\,u_y = c\) (\(a, b, c\) зависят от \(x, y, u\)). Характеристическая система</p>
+            \[\frac{dx}{a} = \frac{dy}{b} = \frac{du}{c}\]
+            <p>даёт два первых интеграла \(\psi_1 = C_1,\ \psi_2 = C_2\); общее решение: \(\Phi(\psi_1, \psi_2) = 0\).</p>
+            <div class="example"><strong>Пример (уравнение переноса):</strong> \(u_t + cu_x = 0,\ u(x, 0) = \varphi(x)\). Характеристики \(x - ct = \text{const}\). Ответ: \(u = \varphi(x - ct)\) — профиль бежит со скоростью \(c\).</div>
+            <div class="example"><strong>Пример (Хопф/Бюргерс без вязкости):</strong> \(u_t + uu_x = 0\): \(u = \varphi(x - ut)\) (неявно); характеристики могут пересекаться — образуются ударные волны.</div>
+        </div>
+
+        <div class="card sec-5" data-sec="5" id="classification">
+            <h3>Классификация уравнений второго порядка <span class="badge">УЧП</span></h3>
+            <p><strong>Вид:</strong> \(Au_{xx} + 2Bu_{xy} + Cu_{yy} + (\text{младшие члены}) = 0\).</p>
+            <table>
+                <tr><th>\(D = B^2 - AC\)</th><th>Тип</th><th>Канонический вид</th><th>Прототип</th></tr>
+                <tr><td>\(D \gt 0\)</td><td>Гиперболический</td><td>\(u_{\xi\eta} + \dots = 0\)</td><td>Волновое</td></tr>
+                <tr><td>\(D = 0\)</td><td>Параболический</td><td>\(u_{\eta\eta} + \dots = 0\)</td><td>Теплопроводности</td></tr>
+                <tr><td>\(D \lt 0\)</td><td>Эллиптический</td><td>\(u_{\xi\xi} + u_{\eta\eta} + \dots = 0\)</td><td>Лапласа</td></tr>
+            </table>
+            <p><strong>Приведение к каноническому виду:</strong> характеристическое уравнение \(A\,dy^2 - 2B\,dx\,dy + C\,dx^2 = 0\), т. е. \(\frac{dy}{dx} = \frac{B \pm \sqrt{D}}{A}\). Его интегралы дают новые переменные \(\xi, \eta\).</p>
+            <div class="example"><strong>Пример:</strong> \(u_{xx} - 4u_{xy} + 3u_{yy} = 0\). \(D = 4 - 3 = 1 \gt 0\), \(\frac{dy}{dx} = -2 \pm 1\): \(\xi = y + x,\ \eta = y + 3x\). Получаем \(u_{\xi\eta} = 0\), \(u = f(x + y) + g(3x + y)\).</div>
+        </div>
+
+        <div class="card sec-5" data-sec="5" id="wave">
+            <h3>Волновое уравнение <span class="badge">УЧП</span></h3>
+            <p><strong>Вид:</strong> \(u_{tt} = a^2u_{xx} + f(x, t)\).</p>
+            <p><strong>Формула Даламбера</strong> (бесконечная струна, \(u|_{t=0} = \varphi,\ u_t|_{t=0} = \psi\)):</p>
+            \[u(x, t) = \frac{\varphi(x - at) + \varphi(x + at)}{2} + \frac{1}{2a}\int_{x-at}^{x+at}\psi(s)\,ds\]
+            \[\qquad + \frac{1}{2a}\int_0^t\!\!\int_{x-a(t-\tau)}^{x+a(t-\tau)} f(\xi, \tau)\,d\xi\,d\tau.\]
+            <p><strong>Струна с закреплёнными концами</strong> \(u(0, t) = u(l, t) = 0\) — метод Фурье:</p>
+            \[u = \sum_{n=1}^{\infty}\left(A_n\cos\frac{\pi nat}{l} + B_n\sin\frac{\pi nat}{l}\right)\sin\frac{\pi nx}{l},\]
+            \[A_n = \frac{2}{l}\int_0^l\varphi(x)\sin\frac{\pi nx}{l}\,dx,\qquad B_n = \frac{2}{\pi na}\int_0^l\psi(x)\sin\frac{\pi nx}{l}\,dx.\]
+            <p>Для полуограниченной струны — продолжить начальные данные нечётно (закреплённый конец) или чётно (свободный конец). В пространстве: формулы Кирхгофа (3D) и Пуассона (2D).</p>
+        </div>
+
+        <div class="card sec-5" data-sec="5" id="heat">
+            <h3>Уравнение теплопроводности (диффузии) <span class="badge">УЧП</span></h3>
+            <p><strong>Вид:</strong> \(u_t = a^2u_{xx} + f(x, t)\), начальное условие \(u|_{t=0} = \varphi(x)\).</p>
+            <p><strong>На всей прямой (формула Пуассона):</strong></p>
+            \[u(x, t) = \frac{1}{2a\sqrt{\pi t}}\int_{-\infty}^{+\infty}\varphi(\xi)\,e^{-\frac{(x - \xi)^2}{4a^2t}}\,d\xi.\]
+            <p><strong>На отрезке</strong> \([0, l]\) с \(u(0, t) = u(l, t) = 0\):</p>
+            \[u = \sum_{n=1}^{\infty}b_n\,e^{-\left(\frac{\pi na}{l}\right)^2t}\sin\frac{\pi nx}{l},\qquad b_n = \frac{2}{l}\int_0^l\varphi(x)\sin\frac{\pi nx}{l}\,dx.\]
+            <p>Неоднородные краевые условия \(u(0,t) = T_1,\ u(l,t) = T_2\): сначала вычесть стационарное решение \(T_1 + (T_2 - T_1)\frac{x}{l}\). Условия на потоки (\(u_x = 0\)) — ряд по косинусам.</p>
+            <p><strong>Принцип максимума:</strong> максимум и минимум решения достигаются на начальном или граничном множестве.</p>
+        </div>
+
+        <div class="card sec-5" data-sec="5" id="laplace-eq">
+            <h3>Уравнения Лапласа и Пуассона <span class="badge">УЧП</span></h3>
+            <p><strong>Вид:</strong> \(\Delta u = 0\) (Лапласа), \(\Delta u = f\) (Пуассона). Решения уравнения Лапласа — <strong>гармонические функции</strong>.</p>
+            <ul>
+                <li><strong>Теорема о среднем:</strong> значение в центре шара равно среднему по сфере.</li>
+                <li><strong>Принцип максимума:</strong> max и min — на границе области; отсюда единственность задачи Дирихле.</li>
+                <li>В полярных координатах: \(u_{rr} + \frac1r u_r + \frac{1}{r^2}u_{\theta\theta} = 0\).</li>
+            </ul>
+            <p><strong>Задача Дирихле в круге</strong> \(r \lt R\), \(u|_{r=R} = \varphi(\theta)\):</p>
+            \[u = \frac{a_0}{2} + \sum_{n=1}^{\infty}\left(\frac{r}{R}\right)^n(a_n\cos n\theta + b_n\sin n\theta),\]
+            <p>где \(a_n, b_n\) — коэффициенты Фурье \(\varphi\). В интегральной форме (<strong>интеграл Пуассона</strong>):</p>
+            \[u(r, \theta) = \frac{1}{2\pi}\int_0^{2\pi}\frac{R^2 - r^2}{R^2 - 2Rr\cos(\theta - t) + r^2}\,\varphi(t)\,dt.\]
+            <p><strong>Фундаментальные решения:</strong> \(\ln r\) (2D), \(\frac{1}{r}\) (3D). Прямоугольник — разделение \(u = X(x)Y(y)\) с \(\sin\) и \(\sinh\).</p>
+        </div>
+
+        <div class="card sec-5" data-sec="5" id="fourier-method">
+            <h3>Метод Фурье (разделения переменных) — алгоритм <span class="badge">УЧП</span></h3>
+            <ol>
+                <li>Ищем решение однородного уравнения вида \(u = X(x)T(t)\).</li>
+                <li>Разделяем: \(\frac{T'}{a^2T} = \frac{X''}{X} = -\lambda\).</li>
+                <li>Решаем задачу Штурма–Лиувилля для \(X\) с краевыми условиями → \(\lambda_n,\ X_n\).</li>
+                <li>Находим \(T_n\) для каждого \(\lambda_n\).</li>
+                <li>Суммируем \(u = \sum T_n(t)X_n(x)\), коэффициенты — из начальных условий (разложение в ряд Фурье).</li>
+                <li>Неоднородное уравнение: ищем \(u = \sum T_n(t)X_n(x)\) и получаем ОДУ на \(T_n\) (метод собственных функций).</li>
+            </ol>
+        </div>
+
+        <!-- ===================== VI. ПРОЧЕЕ ===================== -->
+        <h2 class="sec-title" data-sec="6">VI. Преобразование Лапласа, численные методы и другие виды</h2>
+
+        <div class="card sec-6" data-sec="6" id="laplace">
+            <h3>Операционный метод (преобразование Лапласа) <span class="badge">методы</span></h3>
+            <p>\(F(s) = \mathcal{L}\{f\} = \int_0^{\infty}f(t)e^{-st}\,dt\). Превращает линейное ОДУ с постоянными коэффициентами в алгебраическое уравнение.</p>
+            <table>
+                <tr><th>\(f(t)\)</th><th>\(F(s)\)</th><th>\(f(t)\)</th><th>\(F(s)\)</th></tr>
+                <tr><td>\(1\)</td><td>\(\frac1s\)</td><td>\(\sin\beta t\)</td><td>\(\frac{\beta}{s^2 + \beta^2}\)</td></tr>
+                <tr><td>\(t^n\)</td><td>\(\frac{n!}{s^{n+1}}\)</td><td>\(\cos\beta t\)</td><td>\(\frac{s}{s^2 + \beta^2}\)</td></tr>
+                <tr><td>\(e^{\alpha t}\)</td><td>\(\frac{1}{s - \alpha}\)</td><td>\(e^{\alpha t}f(t)\)</td><td>\(F(s - \alpha)\)</td></tr>
+                <tr><td>\(f'(t)\)</td><td>\(sF - f(0)\)</td><td>\(f''(t)\)</td><td>\(s^2F - sf(0) - f'(0)\)</td></tr>
+                <tr><td>\(t f(t)\)</td><td>\(-F'(s)\)</td><td>\(\int_0^t f(\tau)g(t-\tau)\,d\tau\)</td><td>\(F(s)G(s)\)</td></tr>
+                <tr><td>\(\eta(t - a)f(t - a)\)</td><td>\(e^{-as}F(s)\)</td><td>\(\delta(t - a)\)</td><td>\(e^{-as}\)</td></tr>
+            </table>
+            <div class="example"><strong>Пример:</strong> \(y'' - 3y' + 2y = 0,\ y(0) = 0,\ y'(0) = 1\). \((s^2 - 3s + 2)Y = 1 \Rightarrow Y = \frac{1}{s-2} - \frac{1}{s-1}\). Ответ: \(y = e^{2t} - e^t\).</div>
+        </div>
+
+        <div class="card sec-6" data-sec="6" id="numerical">
+            <h3>Численные методы <span class="badge">методы</span></h3>
+            <p>Для \(y' = f(x, y)\), \(y(x_0) = y_0\), шаг \(h\):</p>
+            <table>
+                <tr><th>Метод</th><th>Формула</th><th>Порядок</th></tr>
+                <tr><td>Эйлера</td><td>\(y_{k+1} = y_k + hf(x_k, y_k)\)</td><td>1</td></tr>
+                <tr><td>Эйлера–Коши (Хойна)</td><td>\(\tilde y = y_k + hf_k,\ y_{k+1} = y_k + \frac h2\big(f_k + f(x_{k+1}, \tilde y)\big)\)</td><td>2</td></tr>
+                <tr><td>Рунге–Кутты 4</td><td>\(y_{k+1} = y_k + \frac h6(k_1 + 2k_2 + 2k_3 + k_4)\)</td><td>4</td></tr>
+            </table>
+            <p>где \(k_1 = f(x_k, y_k)\), \(k_2 = f(x_k + \frac h2, y_k + \frac h2k_1)\), \(k_3 = f(x_k + \frac h2, y_k + \frac h2k_2)\), \(k_4 = f(x_k + h, y_k + hk_3)\).</p>
+            <p><strong>Метод последовательных приближений (Пикара):</strong> \(y_{n+1}(x) = y_0 + \int_{x_0}^x f(t, y_n(t))\,dt\).</p>
+        </div>
+
+        <div class="card sec-6" data-sec="6" id="difference">
+            <h3>Разностные (рекуррентные) уравнения <span class="badge">другие виды</span></h3>
+            <p>Дискретный аналог линейных ОДУ — частая тема олимпиад.</p>
+            <p><strong>Вид:</strong> \(a_{n+2} + pa_{n+1} + qa_n = f(n)\). Характеристическое уравнение \(\lambda^2 + p\lambda + q = 0\):</p>
+            <ul>
+                <li>разные корни: \(a_n = C_1\lambda_1^n + C_2\lambda_2^n\);</li>
+                <li>кратный корень: \(a_n = (C_1 + C_2n)\lambda^n\);</li>
+                <li>\(\lambda = r e^{\pm i\varphi}\): \(a_n = r^n(C_1\cos n\varphi + C_2\sin n\varphi)\).</li>
+            </ul>
+            <p>Частное решение для \(f(n) = P(n)\mu^n\) ищем в виде \(n^sQ(n)\mu^n\) (\(s\) — кратность \(\mu\) как корня) — полная аналогия с ОДУ.</p>
+            <div class="example"><strong>Пример:</strong> Фибоначчи \(F_{n+2} = F_{n+1} + F_n\): \(F_n = \frac{1}{\sqrt5}\left(\left(\frac{1 + \sqrt5}{2}\right)^n - \left(\frac{1 - \sqrt5}{2}\right)^n\right)\).</div>
+        </div>
+
+        <div class="card sec-6" data-sec="6" id="other">
+            <h3>Другие виды уравнений (обзор) <span class="badge">другие виды</span></h3>
+            <ul>
+                <li><strong>Интегральные уравнения Вольтерры</strong> \(y(x) = f(x) + \int_a^x K(x, t)y(t)\,dt\): дифференцированием часто сводятся к ОДУ; с разностным ядром \(K(x - t)\) — преобразованием Лапласа.</li>
+                <li><strong>Интегро-дифференциальные</strong>: \(y' + \int_0^x y\,dt = f\) — дифференцировать или применять Лаплас.</li>
+                <li><strong>Уравнения с запаздыванием</strong> \(y'(t) = f(t, y(t), y(t - \tau))\): метод шагов — на \([0, \tau]\) решаем обычное ОДУ, затем на \([\tau, 2\tau]\) и т. д.</li>
+                <li><strong>Функционально-дифференциальные</strong> (например, \(f'(x) = f(1/x)\)): дифференцировать ещё раз и подставлять, чтобы получить ОДУ.</li>
+                <li><strong>Стохастические</strong> \(dX = \mu(X, t)\,dt + \sigma(X, t)\,dW_t\) — исчисление Ито (формула Ито: \(df(X) = f'dX + \frac12 f''\sigma^2dt\)).</li>
+                <li><strong>Дробного порядка</strong> — с производными Римана–Лиувилля или Капуто; решения выражаются через функцию Миттаг-Леффлера.</li>
+                <li><strong>Нелинейные УЧП:</strong> Бюргерса \(u_t + uu_x = \nu u_{xx}\) (замена Коула–Хопфа \(u = -2\nu\frac{\varphi_x}{\varphi}\) даёт уравнение теплопроводности), КдФ \(u_t + 6uu_x + u_{xxx} = 0\) (солитоны), Гамильтона–Якоби, Навье–Стокса.</li>
+                <li><strong>Уравнения Шрёдингера</strong> \(i\hbar\psi_t = -\frac{\hbar^2}{2m}\Delta\psi + V\psi\) и Гельмгольца \(\Delta u + k^2u = 0\) — решаются разделением переменных.</li>
+            </ul>
+        </div>
+
+        <div class="card sec-6" data-sec="6" id="olympiad-tips">
+            <h3>Приёмы для олимпиадных задач <span class="badge">олимпиады</span></h3>
+            <ul>
+                <li><strong>Трюк с множителем:</strong> условие \(f' + f \gt 0\) переписать как \((e^xf)' \gt 0\) — функция \(e^xf\) возрастает. Аналогично \(f' - kf \to (e^{-kx}f)'\).</li>
+                <li><strong>Неравенство Гронуолла:</strong> если \(u' \le \beta(t)u\), то \(u(t) \le u(t_0)\exp\int_{t_0}^t\beta\).</li>
+                <li><strong>Теоремы сравнения:</strong> если \(y' = f(x, y),\ z' \le f(x, z)\), \(z(x_0) \le y(x_0)\), то \(z \le y\) при \(x \ge x_0\) (при условии Липшица).</li>
+                <li><strong>Закон сохранения:</strong> для \(y'' = f(y)\) величина \(\frac{(y')^2}{2} - \int f\,dy\) постоянна — удобно для оценок и доказательства периодичности.</li>
+                <li><strong>Функциональные уравнения:</strong> \(f(x + y) = f(x)f(y)\), дифференцируемая \(f\) → \(f' = f'(0)f\) → \(f = e^{kx}\). Дифференцирование по параметру часто превращает функциональное уравнение в ОДУ.</li>
+                <li><strong>Теорема Штурма:</strong> между двумя нулями решения \(y'' + q_1y = 0\) есть нуль решения \(y'' + q_2y = 0\), если \(q_2 \gt q_1\) — оценка числа колебаний.</li>
+                <li><strong>Проверка ответа:</strong> всегда подставляйте решение обратно и проверяйте потерянные при делении решения.</li>
+            </ul>
+        </div>
+    </main>
+
+    <section style="margin-top: 40px;">
+        <h2>📌 Как пользоваться справочником</h2>
+        <ol>
+            <li><strong>Определите порядок</strong> и то, разрешено ли уравнение относительно старшей производной.</li>
+            <li><strong>Сверьтесь с таблицей «Как определить тип»</strong> вверху страницы.</li>
+            <li><strong>Откройте карточку типа</strong> — там метод и разобранный пример.</li>
+            <li><strong>Проверьте ответ подстановкой</strong> и не забудьте особые решения.</li>
+        </ol>
+
+        <h3 style="margin-top: 20px;">📖 Что почитать</h3>
+        <ul>
+            <li>А. Ф. Филиппов — «Сборник задач по дифференциальным уравнениям»</li>
+            <li>Л. С. Понтрягин — «Обыкновенные дифференциальные уравнения»</li>
+            <li>В. И. Арнольд — «Обыкновенные дифференциальные уравнения»</li>
+            <li>А. Н. Тихонов, А. А. Самарский — «Уравнения математической физики»</li>
+        </ul>
+    </section>
+
+    <footer>
+        <p>© 2024 Путеводитель по олимпиадам | Раздел «Дифференциальные уравнения»</p>
+        <p><a href="olympiada">← Вернуться к списку олимпиад</a></p>
+    </footer>
+
+    <script>
+        // Оглавление по карточкам
+        const toc = document.getElementById('toc');
+        document.querySelectorAll('.card').forEach(card => {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = '#' + card.id;
+            a.textContent = card.querySelector('h3').firstChild.textContent.trim() || card.id;
+            li.appendChild(a);
+            toc.appendChild(li);
+        });
+
+        // Поиск и фильтрация по разделам
+        const search = document.getElementById('search');
+        const secFilters = document.querySelectorAll('.sec-filter');
+
+        function applyFilters() {
+            const term = search.value.toLowerCase();
+            const selected = Array.from(secFilters).filter(f => f.checked).map(f => f.value);
+
+            document.querySelectorAll('.card').forEach(card => {
+                const visible = selected.includes(card.dataset.sec) &&
+                                card.textContent.toLowerCase().includes(term);
+                card.style.display = visible ? 'block' : 'none';
+            });
+
+            document.querySelectorAll('.sec-title').forEach(title => {
+                const anyVisible = Array.from(document.querySelectorAll('.card[data-sec="' + title.dataset.sec + '"]'))
+                    .some(c => c.style.display !== 'none');
+                title.style.display = anyVisible ? 'block' : 'none';
+            });
+        }
+
+        search.addEventListener('input', applyFilters);
+        secFilters.forEach(f => f.addEventListener('change', applyFilters));
+    </script>
+</body>
+</html>
